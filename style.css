@@ -1,0 +1,14 @@
+body {
+<<<<<<< HEAD
+    background-image: url("images/body.png");
+    background-attachment: fixed;
+    background-position: center;
+=======
+
+>>>>>>> f5f38d2... Front-end
+}
+
+.wrapper {
+    margin: 0 auto;
+    width: 700px;
+}
