@@ -83,7 +83,7 @@ input[type="submit"] {
 }
 
 #loader-script {
-    background-image: url(images/fail.png);
+    background-image: url(icons/fail.png);
     display: none;
     width: 16px;
     height: 16px;
