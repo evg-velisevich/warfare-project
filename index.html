@@ -1,25 +1,34 @@
-<!DOCTYPE html>
 <html lang="ru">
     <head>
-        <meta charset="UTF-8">
-        <title>...</title>
-        <link rel="stylesheet" href="style.css?_v=1.0">
-        <meta name="description" content="В окопе, в окопе, скрипт в окопе, мобильный скрипт в окопе, в окопе">
-        <link rel="shortcut icon" href="icons/favicon.ico" type="image/x-icon">
+        <link rel="stylesheet" type="text/css" href="style.css?__v=1.0">
+        <link rel="shortcut icon" href="http://mobi-scripts.ru/icons/favicon.ico" type="image/x-icon">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <script type="application/javascript" src="js/script.js?_v=1.0"></script>
+        <title>Скрипт</title>
+        <meta name="description" content="В окопе, в окопе, скрипт в окопе, мобильный скрипт в окопе, в окопе">
+        <meta charset="utf-8">
     </head>
     <body>
-        <!-- CamelCase standard -->
-        <div class="wrapper">
-            <div class="uidField">
-                <input type="text" id="userID" placeholder="ID or Link">
+        <div id="container">
+            <div id="line-head">
+                <label>
+                    <input type="text" placeholder="ID/Ссылка" required autocomplete="on">
+                </label>
+                <label for="game"></label>
                 <select id="game">
-                    <option value="vk">В окопе</option>
+                    <option value="okop">В окопе</option>
+                    <option value="ok_okop">В окопе OK</option>
+                    <option value="fb_okop">В окопе FB</option>
+                    <option value="mail_okop">В окопе Mail</option>
                 </select>
-                <button id="getInfo">Load</button>
+                <input type="submit" id="show" value="Показать инфу">
             </div>
-            <div class="scriptContainer"></div>
+            <div class="header">
+                <div id="label-header">
+                    <b><a target="_blank" href="//vk.com/mobi_scripts">GetInfo Mobi 2016-2019</a></b>
+                </div>
+                <div id="loader-script"></div>
+            </div>
+            <div class="frame"></div>
         </div>
     </body>
 </html>
