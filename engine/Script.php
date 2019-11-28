@@ -1,140 +1,12 @@
 <?php
 
+ini_set("display_errors", "On");
+error_reporting(E_ALL);
+
 class Script
 {
 
     protected $userModel = [];
-
-    private $auth_key = '',
-            $user_id = '',
-            $ch,
-            $active_net;
-
-    /**
-     * Constructor.
-     * @param $id
-     * @param $auth
-     * @throws Exception
-     */
-    function __construct($id, $auth)
-    {
-        if (!$this->ch) $this->ch = curl_init();
-        if (!$id || !$auth) {
-            throw new Exception('Not have some data');
-        } else {
-            $this->setUserID($id);
-            $this->setAuthKey($auth);
-        }
-    }
-
-    /**
-     * @param $user_id
-     */
-    function setUserID($user_id)
-    {
-        $this->user_id = $user_id;
-    }
-
-    /**
-     * @param $net
-     */
-    public function setActiveNet($net)
-    {
-        $this->active_net = $net;
-    }
-
-    /**
-     * @param $userID
-     * @return array
-     */
-    public function socialGet($userID)
-    {
-        $data = ['friends' => json_encode([(string)$userID])];
-        return $this->gameApi('social_get', $data);
-    }
-
-    /**
-     * @param $package
-     * @param $params
-     * @return array
-     */
-    public function gameApi($package, $params)
-    {
-        $url = 'http://' . $this->getServer() . '/' . $this->getUserID() . '/' . $this->getAuthKey() . '/' . $package;
-        return $this->curlRequest($url, $params);
-    }
-
-    /**
-     * @return mixed
-     */
-    public function getServer()
-    {
-        $servers = [
-            'vk' => '5.178.83.9' . rand(1, 2),
-            'fb' => '95.213.136.62',
-            'ok' => '31.131.250.243',
-            'mail' => '95.213.136.61'
-        ];
-        return $servers[$this->getActiveNet()];
-    }
-
-    /**
-     * @return mixed
-     */
-    public function getActiveNet()
-    {
-        return $this->active_net;
-    }
-
-    /**
-     * @return string
-     */
-    public function getUserID()
-    {
-        return $this->user_id;
-    }
-
-    /**
-     * @return string
-     */
-    public function getAuthKey()
-    {
-        return $this->auth_key;
-    }
-
-    /**
-     * @param $auth_key
-     */
-    public function setAuthKey($auth_key)
-    {
-        $this->auth_key = $auth_key;
-    }
-
-    /**
-     * @param $url
-     * @param $data
-     * @return array
-     */
-    public function curlRequest($url, $data)
-    {
-        curl_setopt($this->ch, CURLOPT_URL, $url);
-        curl_setopt($this->ch, CURLOPT_RETURNTRANSFER, 1);
-        curl_setopt($this->ch, CURLOPT_FOLLOWLOCATION, 0);
-        curl_setopt($this->ch, CURLOPT_HEADER, 0);
-        curl_setopt($this->ch, CURLOPT_USERAGENT, 'Mozilla/5.0 (Windows; U;Windows NT 5.1;en-US; rv:1.9.0.3) Gecko/2008092417 Firefox/3.0.3');
-        curl_setopt($this->ch, CURLOPT_POST, 1);
-        curl_setopt($this->ch, CURLOPT_POSTFIELDS, is_array($data) ? http_build_query($data) : $data);
-        $res = [
-            json_decode(curl_exec($this->ch), true),
-            curl_getinfo($this->ch)
-        ];
-        return $res;
-    }
-
-    public function isCorrectPack($pack, $userID)
-    {
-        return (is_array($pack) && $this->getValue($pack, [0, 0, 0]) === $userID);
-    }
 
     /**
      * @param int $achievementIndex
@@ -178,12 +50,12 @@ class Script
     }
 
     /**
-     * @param array $array
+     * @param $array
      * @param $key
      * @param null $default
      * @return mixed
      */
-    public function getValue(array $array, $key, $default = null)
+    public function getValue($array, $key, $default = null)
     {
         if (is_array($key)) {
             $lastKey = array_pop($key);
@@ -206,6 +78,7 @@ class Script
         } elseif (is_array($array)) {
             return (isset($array[$key]) || array_key_exists($key, $array)) ? $array[$key] : $default;
         }
+
         return $default;
     }
 
@@ -267,7 +140,7 @@ class Script
      */
     public function getUserGuildID(): string
     {
-        return $this->getValue($this->getUserGuild(), 'id');
+        return $this->getValue($this->getUserGuild(), 'id', '');
     }
 
     /**
@@ -315,7 +188,9 @@ class Script
      */
     public function getSrut(): array
     {
-        return $this->getValue($this->getStaticMaximumResources(), 'srut', 0);
+        $value = $this->getValue($this->getStaticMaximumResources(), 'srut', []);
+
+        return is_array($value) ? $value : [];
     }
 
     /**
@@ -418,7 +293,17 @@ class Script
      */
     public function getExperience(): array
     {
-        return $this->getValue($this->getExperiences(), 'experience', []);
+        $value = $this->getValue($this->getExperiences(), 'experience', []);
+
+        return is_array($value) ? $value : [];
+    }
+
+    /**
+     * @return int
+     */
+    public function getExperienceAmount(): int
+    {
+        return $this->getValue($this->getExperience(), 'amount', 0);
     }
 
     /**
@@ -501,20 +386,92 @@ class Script
     {
         $html = [];
 
-        $html['level'] = $this->getMaxLevel();
+        $html['level'] = $this->getMaxLevel() + 1;
         $html['achievement_points'] = $this->getAchievementsPoints();
         $html['boss_limit'] = $this->getBossLimit();
         $html['status']['time'] = $this->getStatusInfo();
-        $html['experience'] = $this->getExperience();
-        $html['guild']['level'] = $this->getUserGuildLevel();
+        $html['experience'] = $this->getExpData();
+        $html['division'] = $this->getDivisionNumeric() + 1;
+        $html['division_info'] = $this->getDivisionData();
+        $html['guild']['level'] = $this->getUserGuildLevel() + 1;
         $html['guild']['id'] = $this->getUserGuildID();
         $html['talents'] = $this->getUsedTalents();
         $html['army'] = $this->getArmyStrength();
         $html['status']['level'] = $this->getStatusLevel();
         $html['srut'] = $this->getSrutAmount();
         $html['last_login'] = $this->getLastLogin();
+        $html['squad_name'] = $this->getSquadName();
+        $html['damage'] = $this->getDamage();
+        $html['decks_count'] = $this->getDecksCount();
+
+        if ($html['last_login'] < 0) {
+            $html['last_login'] = 'никогда';
+        }
+
+        for ($k = 3; $k < 10; $k++) {
+            $html['weapons'][$k] = $this->getWeapon($k);
+        }
+
+        for ($k = 0; $k < 3; $k++) {
+            $html['guild_weapons'][$k] = $this->getGuildWeapon($k);
+        }
 
         return $html;
+    }
+
+    /**
+     * @return array
+     */
+    public function getDivision(): array
+    {
+        return $this->getValue($this->getUserModel(), 'division', []);
+    }
+
+    /**
+     * @return int
+     */
+    public function getDivisionNumeric(): int
+    {
+        return $this->getValue($this->getDivision(), 'h_div', 0);
+    }
+
+    /**
+     * @return array
+     */
+    public function getDecks(): array {
+        return $this->getValue($this->getUserModel(), 'decks', []);
+    }
+
+    /**
+     * @return int
+     */
+    public function getDecksCount(): int {
+
+        for ($k = 1, $decks = $this->getDecks(), $res = 0; $k < count($decks); $k++) {
+            $res += count($this->getValue($decks, [$k, 'parts'], []));
+        }
+
+        return $res;
+    }
+
+    /**
+     * @return array
+     */
+    public function getDivisionData(): array
+    {
+        $pack = (new Data)->get('divisions');
+        $packNames = (new Data)->get('names');
+
+        foreach ($pack as $index => $exp) {
+            if ($this->getExperienceAmount() >= $exp) {
+                $result = [
+                    'name' => $packNames[$index] . ' дивизион',
+                    'icon' => 'images/div_' . $index . '.png'
+                ];
+            }
+        }
+
+        return $result;
     }
 
     /**
@@ -522,7 +479,152 @@ class Script
      */
     public function getLastLogin(): int
     {
-        return $this->getValue($this->getUserModel(), 'last_login', -1);
+        $value = $this->getValue($this->getUserModel(), 'last_login', -1);
+
+        return is_numeric($value) ? $value : -1;
+    }
+
+    public function getExpData (): array {
+        $result = [
+            'left' => 0,
+            'have' => $this->getExperienceAmount(),
+            'percentage' => 100,
+        ];
+
+        $pack = (new Data)->get('levels');
+        $level = $this->getMaxLevel();
+
+        if ($level < count($pack)) {
+            $result['left'] = $pack[$level + 1] - $result['have'];
+        }
+
+        if ($result['left']) {
+            $result['percentage'] = floor( $result['left'] / (($pack[$level + 1] - $pack[$level]) / 100) );
+        }
+
+        foreach ($result as &$val) {
+            $val = $this->numFormat($val);
+        }
+
+        return $result;
+    }
+
+    /**
+     * @return array
+     */
+    public function getMoney(): array {
+        $pack = (new Data)->get('money');
+        $achievement = $this->getCompletedCategorizedAchievementData(5, 1);
+
+        $result = ['count' => 0, 'time' => $this->ts2date(0)];
+
+        if ($achievement['index'] > 0) {
+            $result = [
+                'count' => $this->numFormat($pack[$achievement['index']]),
+                'time' => $this->ts2date($achievement['time']),
+            ];
+        }
+
+        return $result;
+    }
+
+    /**
+     * @return array
+     */
+    public function getSpirit(): array {
+        $pack = (new Data)->get('spirit');
+        $achievement = $this->getCompletedCategorizedAchievementData(6, 1);
+
+        $result = ['count' => 0, 'time' => $this->ts2date(0)];
+
+        if ($achievement['index'] > 0) {
+            $result = [
+                'count' => $this->numFormat($pack[$achievement['index']]),
+                'time' => $this->ts2date($achievement['time']),
+            ];
+        }
+
+        return $result;
+    }
+
+    /**
+     * @return array
+     */
+    public function getEnergy(): array {
+        $pack = (new Data)->get('energy');
+        $achievement = $this->getCompletedCategorizedAchievementData(19, 1);
+
+        $result = ['count' => 0, 'time' => $this->ts2date(0)];
+
+        if ($achievement['index'] > 0) {
+            $result = [
+                'count' => $this->numFormat($pack[$achievement['index']]),
+                'time' => $this->ts2date($achievement['time']),
+            ];
+        }
+
+        return $result;
+    }
+
+    /**
+     * @return array
+     */
+    public function getDamage(): array {
+        $pack = (new Data)->get('damage');
+        $achievement = $this->getCompletedCategorizedAchievementData(29, 2);
+
+        $result = ['count' => 0, 'time' => $this->ts2date(0)];
+
+        if ($achievement['index'] > 0) {
+            $result = [
+                'count' => $this->numFormat($pack[$achievement['index']]),
+                'time' => $this->ts2date($achievement['time']),
+            ];
+        }
+
+        return $result;
+    }
+
+    /**
+     * @param int $wpn
+     * @return array
+     */
+    public function getWeapon(int $wpn): array {
+        $pack = (new Data)->get('weapons');
+        $indexes = [3 => 6, 4 => 7, 5 => 8, 6 => 9, 7 => 10, 8 => 11, 9 => 12];
+        $achievement = $this->getCompletedCategorizedAchievementData($indexes[$wpn], 1);
+
+        $result = ['count' => 0, 'time' => $this->ts2date(0)];
+
+        if ($achievement['index'] > 0) {
+            $result = [
+                'count' => $this->numFormat($pack[$achievement['index']]),
+                'time' => $this->ts2date($achievement['time']),
+            ];
+        }
+
+        return $result;
+    }
+
+    /**
+     * @param int $wpn
+     * @return array
+     */
+    public function getGuildWeapon(int $wpn): array {
+        $pack = (new Data)->get('weapons');
+        $indexes = [0, 1, 2];
+        $achievement = $this->getCompletedCategorizedAchievementData($indexes[$wpn], 5);
+
+        $result = ['count' => 0, 'time' => $this->ts2date(0)];
+
+        if ($achievement['index'] > 0) {
+            $result = [
+                'count' => $this->numFormat($pack[$achievement['index']]),
+                'time' => $this->ts2date($achievement['time']),
+            ];
+        }
+
+        return $result;
     }
 
     /**
