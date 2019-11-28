@@ -1,29 +1,113 @@
 <?php
 
+ini_set("display_errors", "On");
+error_reporting(E_ALL);
 
 class Game
 {
-
     private $auth_key = '',
             $user_id = '',
             $ch,
-            $active_net;
+            $active_net = 'vk';
 
     /**
-     * Game constructor.
+     * Constructor.
      * @param $id
      * @param $auth
      * @throws Exception
      */
-    function __construct ($id, $auth)
+    function __construct($id, $auth)
     {
-        if(!$this->ch) $this->ch = curl_init();
-        if(!$id || !$auth){
+        if (!$this->ch) $this->ch = curl_init();
+        if (!$id || !$auth) {
             throw new Exception('Not have some data');
-        }else{
+        } else {
             $this->setUserID($id);
             $this->setAuthKey($auth);
         }
+    }
+
+    /**
+     * @param $user_id
+     */
+    function setUserID($user_id)
+    {
+        $this->user_id = $user_id;
+    }
+
+    /**
+     * @param $net
+     */
+    public function setActiveNet($net)
+    {
+        $this->active_net = $net;
+    }
+
+    /**
+     * @param $userID
+     * @return array
+     */
+    public function socialGet($userID)
+    {
+        $data = ['friends' => json_encode([(string)$userID])];
+        return $this->gameApi('social_get', $data);
+    }
+
+    /**
+     * @param $package
+     * @param $params
+     * @return array
+     */
+    public function gameApi($package, $params)
+    {
+        $url = 'http://' . $this->getServer() . '/' . $this->getUserID() . '/' . $this->getAuthKey() . '/' . $package;
+        return $this->curlRequest($url, $params);
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getServer()
+    {
+        $servers = [
+            'vk' => '5.178.83.92',
+            'fb' => '95.213.136.62',
+            'ok' => '31.131.250.243',
+            'mail' => '95.213.136.61'
+        ];
+        return $servers[$this->getActiveNet()];
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getActiveNet()
+    {
+        return $this->active_net;
+    }
+
+    /**
+     * @return string
+     */
+    public function getUserID()
+    {
+        return $this->user_id;
+    }
+
+    /**
+     * @return string
+     */
+    public function getAuthKey()
+    {
+        return $this->auth_key;
+    }
+
+    /**
+     * @param $auth_key
+     */
+    public function setAuthKey($auth_key)
+    {
+        $this->auth_key = $auth_key;
     }
 
     /**
@@ -31,7 +115,7 @@ class Game
      * @param $data
      * @return array
      */
-    public function curlRequest ($url, $data)
+    public function curlRequest($url, $data)
     {
         curl_setopt($this->ch, CURLOPT_URL, $url);
         curl_setopt($this->ch, CURLOPT_RETURNTRANSFER, 1);
@@ -47,89 +131,8 @@ class Game
         return $res;
     }
 
-    /**
-     * @param $package
-     * @param $params
-     * @return array
-     */
-    public function gameApi ($package, $params)
+    public function isCorrectPack($pack, $userID)
     {
-        $url = 'http://' . $this->getServer() . '/' . $this->getUserID() . '/' . $this->getAuthKey() . '/' . $package;
-        return $this->curlRequest($url, $params);
-    }
-
-    /**
-     * @param $net
-     */
-    public function setActiveNet ($net)
-    {
-        $this->active_net = $net;
-    }
-
-    /**
-     * @return mixed
-     */
-    public function getActiveNet ()
-    {
-        return $this->active_net;
-    }
-
-    /**
-     * @param $user_id
-     */
-    function setUserID ($user_id)
-    {
-        $this->user_id = $user_id;
-    }
-
-    /**
-     * @return string
-     */
-    public function getUserID (){
-        return $this->user_id;
-    }
-
-    /**
-     * @param $auth_key
-     */
-    public function setAuthKey ($auth_key)
-    {
-        $this->auth_key = $auth_key;
-    }
-
-    /**
-     * @return string
-     */
-    public function getAuthKey ()
-    {
-        return $this->auth_key;
-    }
-
-    /**
-     * @return mixed
-     */
-    public function getServer ()
-    {
-        $servers = [
-            'vk' => '5.178.83.9'.rand(1, 2),
-            'fb' => '95.213.136.62',
-            'ok' => '31.131.250.243',
-            'mail' => '95.213.136.61'
-        ];
-        return $servers[$this->getActiveNet()];
-    }
-
-    /**
-     * @param $userID
-     * @return array
-     */
-    public function socialGet ($userID)
-    {
-        return $this->gameApi('social_get', ['friends' => [$userID]]);
-    }
-
-    public function isCorrectPack ($pack, $userID)
-    {
-        return ( is_array($pack) && $pack[0][0][0] == $userID ? true : false);
+        return (is_array($pack) && (new Script)->getValue($pack, [0, 0, 0]) === $userID);
     }
 }
