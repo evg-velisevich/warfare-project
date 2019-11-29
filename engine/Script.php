@@ -9,204 +9,59 @@ class Script
     protected $userModel = [];
 
     /**
-     * @param int $achievementIndex
      * @return array
      */
-    public function getCompletedAchievementData(int $achievementIndex): array
+    public function renderHtml(): array
     {
-        return $this->getAchievementData($this->getCompletedAchievements(), $achievementIndex);
-    }
+        $html = [];
 
-    /**
-     * @param array $array
-     * @param int $achievementCategory
-     * @param int $achievementIndex
-     * @return array
-     */
-    public function getAchievementData(array $array, int $achievementIndex, int $achievementCategory = -1): array
-    {
-        $result = [
-            'index' => -1,
-            'time' => 0,
-        ];
+        $html['level'] = $this->getMaxLevel() + 1;
+        $html['achievement_points'] = $this->getAchievementsPoints();
+        $html['boss_limit'] = $this->getBossLimit();
+        $html['status']['time'] = $this->getStatusInfo();
+        $html['experience'] = $this->getExpData();
+        $html['division'] = $this->getDivisionNumeric() + 1;
+        $html['division_info'] = $this->getDivisionData();
+        $html['guild']['level'] = $this->getUserGuildLevel() + 1;
+        $html['guild']['id'] = $this->getUserGuildID();
+        $html['talents'] = $this->getUsedTalents();
+        $html['army'] = $this->getArmyStrength();
+        $html['status']['level'] = $this->getStatusLevel();
+        $html['status']['active'] = $this->isActiveStatus();
+        $html['srut'] = $this->getSrutAmount();
+        $html['last_login'] = $this->getLastLogin();
+        $html['squad_name'] = $this->getSquadName();
+        $html['damage'] = $this->getDamage();
+        $html['spirit'] = $this->getSpirit();
+        $html['money'] = $this->getMoney();
+        $html['energy'] = $this->getEnergy();
+        $html['decks_count'] = $this->getDecksCount();
 
-        if ($achievementCategory > 0) {
-            if ($data = $this->getValue($array, [$achievementCategory, $achievementIndex])) {
-                $result = [
-                    'index' => $data[0],
-                    'time' => $data[1],
-                ];
-            }
-        } else {
-            if ($data = $this->getValue($array, [$achievementIndex])) {
-                $result = [
-                    'index' => 0,
-                    'time' => $data,
-                ];
-            }
+        if ($html['last_login'] < 0) {
+            $html['last_login'] = 'никогда';
         }
 
-        return $result;
-    }
-
-    /**
-     * @param $array
-     * @param $key
-     * @param null $default
-     * @return mixed
-     */
-    public function getValue($array, $key, $default = null)
-    {
-        if (is_array($key)) {
-            $lastKey = array_pop($key);
-            foreach ($key as $keyPart) {
-                $array = $this->getValue($array, $keyPart);
-            }
-            $key = $lastKey;
-        }
-        if (is_array($array) && (isset($array[$key]) || array_key_exists($key, $array))) {
-            return $array[$key];
-        }
-        if (($pos = strrpos($key, '.')) !== false) {
-            $array = $this->getValue($array, substr($key, 0, $pos), $default);
-            $key = substr($key, $pos + 1);
-        }
-        if (is_object($array)) {
-            // this is expected to fail if the property does not exist, or __get() is not implemented
-            // it is not reliably possible to check whether a property is accessible beforehand
-            return $array->$key;
-        } elseif (is_array($array)) {
-            return (isset($array[$key]) || array_key_exists($key, $array)) ? $array[$key] : $default;
+        for ($k = 3; $k < 10; $k++) {
+            $html['weapons'][$k] = $this->getWeapon($k);
         }
 
-        return $default;
-    }
-
-    /**
-     * @return array
-     */
-    private function getCompletedAchievements(): array
-    {
-        return $this->getValue($this->getUserModel(), 'completed_achievements', []);
-    }
-
-    /**
-     * @return array
-     */
-    public function getUserModel(): array
-    {
-        return !empty($this->userModel) ? $this->userModel : [];
-    }
-
-    /**
-     * @param array $model
-     */
-    public function setUserModel(array $model): void
-    {
-        if (!empty($model) && is_array($model) && $this->isValidModel($model)) {
-            $this->userModel = $model;
+        for ($k = 0; $k < 3; $k++) {
+            $html['guild_weapons'][$k] = $this->getGuildWeapon($k);
         }
-    }
 
-    /**
-     * @param array $model
-     * @return bool
-     */
-    protected function isValidModel(array $model): bool
-    {
-        return array_key_exists('completed_categorized_achievements', $model) && array_key_exists('last_login', $model);
-    }
+        for ($k = 0; $k < 2; $k++) {
+            $html['guild_resources'][$k] = $this->getGuildResources($k);
+        }
 
-    /**
-     * @param int $achievementIndex
-     * @param int $achievementCategory
-     * @return array
-     */
-    public function getCompletedCategorizedAchievementData(int $achievementIndex, int $achievementCategory): array
-    {
-        return $this->getAchievementData($this->getCompletedCategorizedAchievements(), $achievementIndex, $achievementCategory);
-    }
-
-    /**
-     * @return array
-     */
-    public function getCompletedCategorizedAchievements(): array
-    {
-        return $this->getValue($this->getUserModel(), 'completed_categorized_achievements', []);
-    }
-
-    /**
-     * @return string
-     */
-    public function getUserGuildID(): string
-    {
-        return $this->getValue($this->getUserGuild(), 'id', '');
-    }
-
-    /**
-     * @return array
-     */
-    public function getUserGuild(): array
-    {
-        return $this->getValue($this->getUserModel(), 'user_guild', []);
+        return $html;
     }
 
     /**
      * @return int
      */
-    public function getUsedTalents(): int
+    public function getMaxLevel(): int
     {
-        return $this->getValue($this->getStaticResources(), 'used_talents', 0);
-    }
-
-    /**
-     * @return array
-     */
-    public function getStaticResources(): array
-    {
-        return $this->getValue($this->getUserModel(), 'static_resources', []);
-    }
-
-    /**
-     * @return int
-     */
-    public function getArmyStrength(): int
-    {
-        return $this->getValue($this->getStaticResources(), 'army_strength', 0);
-    }
-
-    /**
-     * @return int
-     */
-    public function getSrutAmount(): int
-    {
-        return $this->getValue($this->getSrut(), 'amount', 0);
-    }
-
-    /**
-     * @return array
-     */
-    public function getSrut(): array
-    {
-        $value = $this->getValue($this->getStaticMaximumResources(), 'srut', []);
-
-        return is_array($value) ? $value : [];
-    }
-
-    /**
-     * @return array
-     */
-    public function getStaticMaximumResources(): array
-    {
-        return $this->getValue($this->getUserModel(), 'static_maximum_resources', []);
-    }
-
-    /**
-     * @return array
-     */
-    public function getInterimResources(): array
-    {
-        return $this->getValue($this->getUserModel(), 'interim_resources', []);
+        return $this->getValue($this->getExperience(), 'max_level', 0);
     }
 
     /**
@@ -215,6 +70,14 @@ class Script
     public function getAchievementsPoints(): int
     {
         return $this->getValue($this->getStaticResources(), 'achievement_points', 0);
+    }
+
+    /**
+     * @return array
+     */
+    public function getStaticResources(): array
+    {
+        return $this->getValue($this->getUserModel(), 'static_resources', []);
     }
 
     /**
@@ -283,43 +146,101 @@ class Script
     /**
      * @return int
      */
-    public function getMaxLevel(): int
-    {
-        return $this->getValue($this->getExperience(), 'max_level', 0);
-    }
-
-    /**
-     * @return array
-     */
-    public function getExperience(): array
-    {
-        $value = $this->getValue($this->getExperiences(), 'experience', []);
-
-        return is_array($value) ? $value : [];
-    }
-
-    /**
-     * @return int
-     */
-    public function getExperienceAmount(): int
-    {
-        return $this->getValue($this->getExperience(), 'amount', 0);
-    }
-
-    /**
-     * @return array
-     */
-    public function getExperiences(): array
-    {
-        return $this->getValue($this->getUserModel(), 'experiences', []);
-    }
-
-    /**
-     * @return int
-     */
     public function getUserGuildLevel(): int
     {
         return $this->getValue($this->getUserGuild(), 'level', 0);
+    }
+
+    /**
+     * @return array
+     */
+    public function getUserGuild(): array
+    {
+        return $this->getValue($this->getUserModel(), 'user_guild', []);
+    }
+
+    /**
+     * @return bool
+     */
+    public function isActiveStatus(): bool
+    {
+        return $this->getStatusTime() > time();
+    }
+
+    /**
+     * @return int
+     */
+    public function getStatusTime(): int
+    {
+        return $this->getValue($this->getInterimResources(), 'status_time', 0);
+    }
+
+    /**
+     * @return array
+     */
+    public function getInterimResources(): array
+    {
+        return $this->getValue($this->getUserModel(), 'interim_resources', []);
+    }
+
+    /**
+     * @param $array
+     * @param $key
+     * @param null $default
+     * @return mixed
+     */
+    public function getValue($array, $key, $default = null)
+    {
+        if (is_array($key)) {
+            $lastKey = array_pop($key);
+            foreach ($key as $keyPart) {
+                $array = $this->getValue($array, $keyPart);
+            }
+            $key = $lastKey;
+        }
+        if (is_array($array) && (isset($array[$key]) || array_key_exists($key, $array))) {
+            return $array[$key];
+        }
+        if (($pos = strrpos($key, '.')) !== false) {
+            $array = $this->getValue($array, substr($key, 0, $pos), $default);
+            $key = substr($key, $pos + 1);
+        }
+        if (is_object($array)) {
+            // this is expected to fail if the property does not exist, or __get() is not implemented
+            // it is not reliably possible to check whether a property is accessible beforehand
+            return $array->$key;
+        } elseif (is_array($array)) {
+            return (isset($array[$key]) || array_key_exists($key, $array)) ? $array[$key] : $default;
+        }
+
+        return $default;
+    }
+
+    /**
+     * @return array
+     */
+    public function getUserModel(): array
+    {
+        return !empty($this->userModel) ? $this->userModel : [];
+    }
+
+    /**
+     * @param array $model
+     */
+    public function setUserModel(array $model): void
+    {
+        if (!empty($model) && is_array($model) && $this->isValidModel($model)) {
+            $this->userModel = $model;
+        }
+    }
+
+    /**
+     * @param array $model
+     * @return bool
+     */
+    protected function isValidModel(array $model): bool
+    {
+        return array_key_exists('completed_categorized_achievements', $model) && array_key_exists('last_login', $model);
     }
 
     /**
@@ -356,125 +277,40 @@ class Script
     }
 
     /**
-     * @return string
-     */
-    public function getStatusInfo(): string
-    {
-        return ($this->isActiveStatus() ? $this->asDuration($this->getStatusTime() - time(), true) : 'не активна');
-    }
-
-    /**
-     * @return bool
-     */
-    public function isActiveStatus(): bool
-    {
-        return $this->getStatusTime() > time();
-    }
-
-    /**
-     * @return int
-     */
-    public function getStatusTime(): int
-    {
-        return $this->getValue($this->getInterimResources(), 'status_time', 0);
-    }
-
-    /**
+     * @param int $achievementIndex
+     * @param int $achievementCategory
      * @return array
      */
-    public function renderHtml (): array
+    public function getCompletedCategorizedAchievementData(int $achievementIndex, int $achievementCategory): array
     {
-        $html = [];
-
-        $html['level'] = $this->getMaxLevel() + 1;
-        $html['achievement_points'] = $this->getAchievementsPoints();
-        $html['boss_limit'] = $this->getBossLimit();
-        $html['status']['time'] = $this->getStatusInfo();
-        $html['experience'] = $this->getExpData();
-        $html['division'] = $this->getDivisionNumeric() + 1;
-        $html['division_info'] = $this->getDivisionData();
-        $html['guild']['level'] = $this->getUserGuildLevel() + 1;
-        $html['guild']['id'] = $this->getUserGuildID();
-        $html['talents'] = $this->getUsedTalents();
-        $html['army'] = $this->getArmyStrength();
-        $html['status']['level'] = $this->getStatusLevel();
-        $html['status']['active'] = $this->isActiveStatus();
-        $html['srut'] = $this->getSrutAmount();
-        $html['last_login'] = $this->getLastLogin();
-        $html['squad_name'] = $this->getSquadName();
-        $html['damage'] = $this->getDamage();
-        $html['spirit'] = $this->getSpirit();
-        $html['money'] = $this->getMoney();
-        $html['energy'] = $this->getEnergy();
-        $html['decks_count'] = $this->getDecksCount();
-
-        if ($html['last_login'] < 0) {
-            $html['last_login'] = 'никогда';
-        }
-
-        for ($k = 3; $k < 10; $k++) {
-            $html['weapons'][$k] = $this->getWeapon($k);
-        }
-
-        for ($k = 0; $k < 3; $k++) {
-            $html['guild_weapons'][$k] = $this->getGuildWeapon($k);
-        }
-
-        for ($k = 0; $k < 2; $k++) {
-            $html['guild_resources'][$k] = $this->getGuildResources($k);
-        }
-
-        return $html;
+        return $this->getAchievementData($this->getCompletedCategorizedAchievements(), $achievementIndex, $achievementCategory);
     }
 
     /**
+     * @param array $array
+     * @param int $achievementCategory
+     * @param int $achievementIndex
      * @return array
      */
-    public function getDivision(): array
+    public function getAchievementData(array $array, int $achievementIndex, int $achievementCategory = -1): array
     {
-        return $this->getValue($this->getUserModel(), 'division', []);
-    }
+        $result = [
+            'index' => -1,
+            'time' => 0,
+        ];
 
-    /**
-     * @return int
-     */
-    public function getDivisionNumeric(): int
-    {
-        return $this->getValue($this->getDivision(), 'h_div', 0);
-    }
-
-    /**
-     * @return array
-     */
-    public function getDecks(): array {
-        return $this->getValue($this->getUserModel(), 'decks', []);
-    }
-
-    /**
-     * @return int
-     */
-    public function getDecksCount(): int {
-
-        for ($k = 1, $decks = $this->getDecks(), $res = 0; $k < count($decks); $k++) {
-            $res += count($this->getValue($decks, [$k, 'parts'], []));
-        }
-
-        return $res;
-    }
-
-    /**
-     * @return array
-     */
-    public function getDivisionData(): array
-    {
-        $pack = (new Data)->get('divisions');
-        $packNames = (new Data)->get('names');
-
-        foreach ($pack as $index => $exp) {
-            if ($this->getExperienceAmount() >= $exp) {
+        if ($achievementCategory > 0) {
+            if ($data = $this->getValue($array, [$achievementCategory, $achievementIndex])) {
                 $result = [
-                    'name' => $packNames[$index] . ' дивизион',
-                    'icon' => 'icons/div_' . $index . '.png'
+                    'index' => $data[0],
+                    'time' => $data[1],
+                ];
+            }
+        } else {
+            if ($data = $this->getValue($array, [$achievementIndex])) {
+                $result = [
+                    'index' => 0,
+                    'time' => $data,
                 ];
             }
         }
@@ -483,186 +319,36 @@ class Script
     }
 
     /**
+     * @return array
+     */
+    public function getCompletedCategorizedAchievements(): array
+    {
+        return $this->getValue($this->getUserModel(), 'completed_categorized_achievements', []);
+    }
+
+    /**
+     * @param int $achievementIndex
+     * @return array
+     */
+    public function getCompletedAchievementData(int $achievementIndex): array
+    {
+        return $this->getAchievementData($this->getCompletedAchievements(), $achievementIndex);
+    }
+
+    /**
+     * @return array
+     */
+    private function getCompletedAchievements(): array
+    {
+        return $this->getValue($this->getUserModel(), 'completed_achievements', []);
+    }
+
+    /**
      * @return string
      */
-    public function getLastLogin(): string
+    public function getStatusInfo(): string
     {
-        $value = $this->getValue($this->getUserModel(), 'last_login');
-
-        return $value !== null ? $this->asDuration(time() - $value) . ' назад' : 'никогда';
-    }
-
-    public function getExpData (): array {
-        $result = [
-            'left' => 0,
-            'have' => $this->getExperienceAmount(),
-            'percentage' => 100,
-        ];
-
-        $pack = (new Data)->get('levels');
-        $level = $this->getMaxLevel();
-
-        if ($level < count($pack)) {
-            $result['left'] = $pack[$level + 1] - $result['have'];
-        }
-
-        if ($result['left']) {
-            $result['percentage'] = floor( $result['left'] / (($pack[$level + 1] - $pack[$level]) / 100) );
-        }
-
-        foreach ($result as &$val) {
-            $val = $this->numFormat($val);
-        }
-
-        return $result;
-    }
-
-    /**
-     * @return array
-     */
-    public function getMoney(): array {
-        $pack = (new Data)->get('money');
-        $achievement = $this->getCompletedCategorizedAchievementData(5, 1);
-
-        $result = ['count' => 0, 'time' => $this->ts2date(0)];
-
-        if ($achievement['index'] > 0) {
-            $result = [
-                'count' => $this->numFormat($pack[$achievement['index']]),
-                'time' => $this->ts2date($achievement['time']),
-            ];
-        }
-
-        return $result;
-    }
-
-    /**
-     * @return array
-     */
-    public function getSpirit(): array {
-        $pack = (new Data)->get('spirit');
-        $achievement = $this->getCompletedCategorizedAchievementData(6, 1);
-
-        $result = ['count' => 0, 'time' => $this->ts2date(0)];
-
-        if ($achievement['index'] > 0) {
-            $result = [
-                'count' => $this->numFormat($pack[$achievement['index']]),
-                'time' => $this->ts2date($achievement['time']),
-            ];
-        }
-
-        return $result;
-    }
-
-    /**
-     * @return array
-     */
-    public function getEnergy(): array {
-        $pack = (new Data)->get('energy');
-        $achievement = $this->getCompletedCategorizedAchievementData(19, 1);
-
-        $result = ['count' => 0, 'time' => $this->ts2date(0)];
-
-        if ($achievement['index'] > 0) {
-            $result = [
-                'count' => $this->numFormat($pack[$achievement['index']]),
-                'time' => $this->ts2date($achievement['time']),
-            ];
-        }
-
-        return $result;
-    }
-
-    /**
-     * @return array
-     */
-    public function getDamage(): array {
-        $pack = (new Data)->get('damage');
-        $achievement = $this->getCompletedCategorizedAchievementData(29, 2);
-
-        $result = ['count' => 0, 'time' => $this->ts2date(0), 'ranks' => ''];
-
-        if ($achievement['index'] > 0) {
-            $result = [
-                'count' => $this->numFormat($pack[$achievement['index']]),
-                'time' => $this->ts2date($achievement['time']),
-                'ranks' => '',
-            ];
-        }
-
-        for ($k = 0, $x = 0; $k < 2; $k++) {
-            $result['ranks'] .= '<div id="ranks-line">';
-            for ($i = 0; $i < 25; $i++, $x++) {
-                $result['ranks'] .= '<div class="img_open"><img style="width: 10px;height: 10px;" src="images/rank_' . ($achievement['index'] >= $x ? 'open' : 'close') . '.png"></div>';
-            }
-            $result['ranks'] .= '</div>';
-        }
-
-        return $result;
-    }
-
-    /**
-     * @param int $wpn
-     * @return array
-     */
-    public function getWeapon(int $wpn): array {
-        $pack = (new Data)->get('weapons');
-        $indexes = [3 => 6, 4 => 7, 5 => 8, 6 => 9, 7 => 10, 8 => 11, 9 => 12];
-        $achievement = $this->getCompletedCategorizedAchievementData($indexes[$wpn], 2);
-
-        $result = ['count' => 0, 'time' => $this->ts2date(0)];
-
-        if ($achievement['index'] > 0) {
-            $result = [
-                'count' => $this->numFormat($pack[$achievement['index']]),
-                'time' => $this->ts2date($achievement['time']),
-            ];
-        }
-
-        return $result;
-    }
-
-    /**
-     * @param int $wpn
-     * @return array
-     */
-    public function getGuildWeapon(int $wpn): array {
-        $pack = (new Data)->get('weapons');
-        $indexes = [0, 1, 2];
-        $achievement = $this->getCompletedCategorizedAchievementData($indexes[$wpn], 5);
-
-        $result = ['count' => 0, 'time' => $this->ts2date(0)];
-
-        if ($achievement['index'] > 0) {
-            $result = [
-                'count' => $this->numFormat($pack[$achievement['index']]),
-                'time' => $this->ts2date($achievement['time']),
-            ];
-        }
-
-        return $result;
-    }
-
-    /**
-     * @param int $resource
-     * @return array
-     */
-    public function getGuildResources(int $resource): array {
-        $pack = (new Data)->get('guild');
-        $indexes = [3, 4];
-        $achievement = $this->getCompletedCategorizedAchievementData($indexes[$resource], 5);
-
-        $result = ['count' => 0, 'time' => $this->ts2date(0)];
-
-        if ($achievement['index'] > 0) {
-            $result = [
-                'count' => $this->numFormat($pack[$achievement['index']]),
-                'time' => $this->ts2date($achievement['time']),
-            ];
-        }
-
-        return $result;
+        return ($this->isActiveStatus() ? $this->asDuration($this->getStatusTime() - time(), true) : 'не активна');
     }
 
     /**
@@ -696,7 +382,7 @@ class Script
 
         foreach ($strtime as $time_key => $time_value) {
             if ($time_value > 0 && is_numeric($time_value)) {
-                $result[] = $time_value . ' ' . ($short ? mb_substr($plurals[$time_key][$this->plural($time_value)], 0, 1): $plurals[$time_key][$this->plural($time_value)]);
+                $result[] = $time_value . ' ' . ($short ? mb_substr($plurals[$time_key][$this->plural($time_value)], 0, 1) : $plurals[$time_key][$this->plural($time_value)]);
             }
         }
 
@@ -716,6 +402,163 @@ class Script
         else return 2;
     }
 
+    public function getExpData(): array
+    {
+        $result = [
+            'left' => 0,
+            'have' => $this->getExperienceAmount(),
+            'percentage' => 100,
+        ];
+
+        $pack = (new Data)->get('levels');
+        $level = $this->getMaxLevel();
+
+        if ($level < count($pack)) {
+            $result['left'] = $pack[$level + 1] - $result['have'];
+        }
+
+        if ($result['left']) {
+            $result['percentage'] = floor($result['left'] / (($pack[$level + 1] - $pack[$level]) / 100));
+        }
+
+        foreach ($result as &$val) {
+            $val = $this->numFormat($val);
+        }
+
+        return $result;
+    }
+
+    /**
+     * @return int
+     */
+    public function getExperienceAmount(): int
+    {
+        return $this->getValue($this->getExperience(), 'amount', 0);
+    }
+
+    /**
+     * @return array
+     */
+    public function getExperience(): array
+    {
+        $value = $this->getValue($this->getExperiences(), 'experience', []);
+
+        return is_array($value) ? $value : [];
+    }
+
+    /**
+     * @return array
+     */
+    public function getExperiences(): array
+    {
+        return $this->getValue($this->getUserModel(), 'experiences', []);
+    }
+
+    /**
+     * @param int $number
+     * @return string
+     */
+    public function numFormat(int $number): string
+    {
+        return number_format($number, 0, '', ' ');
+    }
+
+    /**
+     * @return int
+     */
+    public function getDivisionNumeric(): int
+    {
+        return $this->getValue($this->getDivision(), 'h_div', 0);
+    }
+
+    /**
+     * @return array
+     */
+    public function getDivision(): array
+    {
+        return $this->getValue($this->getUserModel(), 'division', []);
+    }
+
+    /**
+     * @return array
+     */
+    public function getDivisionData(): array
+    {
+        $pack = (new Data)->get('divisions');
+        $packNames = (new Data)->get('names');
+
+        foreach ($pack as $index => $exp) {
+            if ($this->getExperienceAmount() >= $exp) {
+                $result = [
+                    'name' => $packNames[$index] . ' дивизион',
+                    'icon' => 'icons/div_' . $index . '.png'
+                ];
+            }
+        }
+
+        return $result;
+    }
+
+    /**
+     * @return string
+     */
+    public function getUserGuildID(): string
+    {
+        return $this->getValue($this->getUserGuild(), 'id', '');
+    }
+
+    /**
+     * @return int
+     */
+    public function getUsedTalents(): int
+    {
+        return $this->getValue($this->getStaticResources(), 'used_talents', 0);
+    }
+
+    /**
+     * @return int
+     */
+    public function getArmyStrength(): int
+    {
+        return $this->getValue($this->getStaticResources(), 'army_strength', 0);
+    }
+
+    /**
+     * @return int
+     */
+    public function getSrutAmount(): int
+    {
+        return $this->getValue($this->getSrut(), 'amount', 0);
+    }
+
+    /**
+     * @return array
+     */
+    public function getSrut(): array
+    {
+        $value = $this->getValue($this->getStaticMaximumResources(), 'srut', []);
+
+        return is_array($value) ? $value : [];
+    }
+
+    /**
+     * @return array
+     */
+    public function getStaticMaximumResources(): array
+    {
+        return $this->getValue($this->getUserModel(), 'static_maximum_resources', []);
+    }
+
+    /**
+     * @return string
+     */
+    public function getLastLogin(): string
+    {
+        $value = $this->getValue($this->getUserModel(), 'last_login');
+
+        return $value !== null ? $this->asDuration(time() - $value) . ' назад' : 'никогда';
+    }
+
     /**
      * @return string
      */
@@ -733,12 +576,32 @@ class Script
     }
 
     /**
-     * @param int $number
-     * @return string
+     * @return array
      */
-    public function numFormat(int $number): string
+    public function getDamage(): array
     {
-        return number_format($number, 0, '', ' ');
+        $pack = (new Data)->get('damage');
+        $achievement = $this->getCompletedCategorizedAchievementData(29, 2);
+
+        $result = ['count' => 0, 'time' => $this->ts2date(0), 'ranks' => ''];
+
+        if ($achievement['index'] > 0) {
+            $result = [
+                'count' => $this->numFormat($pack[$achievement['index']]),
+                'time' => $this->ts2date($achievement['time']),
+                'ranks' => '',
+            ];
+        }
+
+        for ($k = 0, $x = 0; $k < 2; $k++) {
+            $result['ranks'] .= '<div id="ranks-line">';
+            for ($i = 0; $i < 25; $i++, $x++) {
+                $result['ranks'] .= '<div class="img_open"><img style="width: 10px;height: 10px;" src="images/rank_' . ($achievement['index'] >= $x ? 'open' : 'close') . '.png"></div>';
+            }
+            $result['ranks'] .= '</div>';
+        }
+
+        return $result;
     }
 
     /**
@@ -748,5 +611,152 @@ class Script
     public function ts2date(int $timestamp): string
     {
         return date("d.m.Y в H:i:s", $timestamp);
+    }
+
+    /**
+     * @return array
+     */
+    public function getSpirit(): array
+    {
+        $pack = (new Data)->get('spirit');
+        $achievement = $this->getCompletedCategorizedAchievementData(6, 1);
+
+        $result = ['count' => 0, 'time' => $this->ts2date(0)];
+
+        if ($achievement['index'] > 0) {
+            $result = [
+                'count' => $this->numFormat($pack[$achievement['index']]),
+                'time' => $this->ts2date($achievement['time']),
+            ];
+        }
+
+        return $result;
+    }
+
+    /**
+     * @return array
+     */
+    public function getMoney(): array
+    {
+        $pack = (new Data)->get('money');
+        $achievement = $this->getCompletedCategorizedAchievementData(5, 1);
+
+        $result = ['count' => 0, 'time' => $this->ts2date(0)];
+
+        if ($achievement['index'] > 0) {
+            $result = [
+                'count' => $this->numFormat($pack[$achievement['index']]),
+                'time' => $this->ts2date($achievement['time']),
+            ];
+        }
+
+        return $result;
+    }
+
+    /**
+     * @return array
+     */
+    public function getEnergy(): array
+    {
+        $pack = (new Data)->get('energy');
+        $achievement = $this->getCompletedCategorizedAchievementData(19, 1);
+
+        $result = ['count' => 0, 'time' => $this->ts2date(0)];
+
+        if ($achievement['index'] > 0) {
+            $result = [
+                'count' => $this->numFormat($pack[$achievement['index']]),
+                'time' => $this->ts2date($achievement['time']),
+            ];
+        }
+
+        return $result;
+    }
+
+    /**
+     * @return int
+     */
+    public function getDecksCount(): int
+    {
+
+        for ($k = 1, $decks = $this->getDecks(), $res = 0; $k < count($decks); $k++) {
+            $res += count($this->getValue($decks, [$k, 'parts'], []));
+        }
+
+        return $res;
+    }
+
+    /**
+     * @return array
+     */
+    public function getDecks(): array
+    {
+        return $this->getValue($this->getUserModel(), 'decks', []);
+    }
+
+    /**
+     * @param int $wpn
+     * @return array
+     */
+    public function getWeapon(int $wpn): array
+    {
+        $pack = (new Data)->get('weapons');
+        $indexes = [3 => 6, 4 => 7, 5 => 8, 6 => 9, 7 => 10, 8 => 11, 9 => 12];
+        $achievement = $this->getCompletedCategorizedAchievementData($indexes[$wpn], 2);
+
+        $result = ['count' => 0, 'time' => $this->ts2date(0)];
+
+        if ($achievement['index'] > 0) {
+            $result = [
+                'count' => $this->numFormat($pack[$achievement['index']]),
+                'time' => $this->ts2date($achievement['time']),
+            ];
+        }
+
+        return $result;
+    }
+
+    /**
+     * @param int $wpn
+     * @return array
+     */
+    public function getGuildWeapon(int $wpn): array
+    {
+        $pack = (new Data)->get('weapons');
+        $indexes = [0, 1, 2];
+        $achievement = $this->getCompletedCategorizedAchievementData($indexes[$wpn], 5);
+
+        $result = ['count' => 0, 'time' => $this->ts2date(0)];
+
+        if ($achievement['index'] > 0) {
+            $result = [
+                'count' => $this->numFormat($pack[$achievement['index']]),
+                'time' => $this->ts2date($achievement['time']),
+            ];
+        }
+
+        return $result;
+    }
+
+    /**
+     * @param int $resource
+     * @return array
+     */
+    public function getGuildResources(int $resource): array
+    {
+        $pack = (new Data)->get('guild');
+        $indexes = [3, 4];
+        $achievement = $this->getCompletedCategorizedAchievementData($indexes[$resource], 5);
+
+        $result = ['count' => 0, 'time' => $this->ts2date(0)];
+
+        if ($achievement['index'] > 0) {
+            $result = [
+                'count' => $this->numFormat($pack[$achievement['index']]),
+                'time' => $this->ts2date($achievement['time']),
+            ];
+        }
+
+        return $result;
     }
 }

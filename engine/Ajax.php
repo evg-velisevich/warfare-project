@@ -23,16 +23,18 @@ class Ajax
     {
         $classNames = ["Script", "Game", "Data"];
         foreach ($classNames as $className) {
-            require_once($className . '.php');
+            if (file_exists($className . '.php')) {
+                require_once($className . '.php');
+            }
         }
     }
 
     /**
-     * @param $error
+     * Print a ready JSON
      */
-    public function setError($error): void
+    public function printResponse(): void
     {
-        $this->response['error'] = $error;
+        print_r(json_encode($this->getResponse(), JSON_PRETTY_PRINT));
     }
 
     /**
@@ -41,13 +43,6 @@ class Ajax
     public function getResponse(): array
     {
         return $this->response;
-    }
-
-    /**
-     * Print a ready JSON
-     */
-    public function printResponse (): void {
-        print_r(json_encode($this->getResponse(), JSON_PRETTY_PRINT));
     }
 
     /**
@@ -61,14 +56,16 @@ class Ajax
     /**
      * @return bool
      */
-    public function isValidRequest (): bool {
+    public function isValidRequest(): bool
+    {
         return isset($_GET) && array_key_exists('user_id', $_GET) && is_numeric($_GET['user_id']);
     }
 
     /**
      * @throws Exception
      */
-    public function startRender (): void {
+    public function startRender(): void
+    {
         $game = new Game("415593668", "b497fa458ca25f40fc1d43fcdce9aee1");
         $script = new Script();
 
@@ -85,5 +82,13 @@ class Ajax
                 usleep(.5 * 1000 * 1000);
             }
         }
+    }
+
+    /**
+     * @param $error
+     */
+    public function setError($error): void
+    {
+        $this->response['error'] = $error;
     }
 }
