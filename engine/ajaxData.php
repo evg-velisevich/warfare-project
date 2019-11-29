@@ -10,10 +10,10 @@ $ajax = new Ajax();
 if ($ajax->isValidRequest()) {
     try {
         $ajax->startRender();
-    } catch (Exception $e) {}
+    } catch (Exception $e) {
+    }
 } else {
     $ajax->setError('Неверный запрос');
 }
 
 $ajax->printResponse();
-?>
