@@ -5,7 +5,20 @@ namespace src\Script;
 class Script extends MyFormatter
 {
 
+    /**
+     * @var array
+     */
     protected $userModel = [];
+
+    /**
+     * @var Data
+     */
+    private $data = null;
+
+    public function __construct()
+    {
+        $this->data = new Data();
+    }
 
     /**
      * @return array
@@ -31,9 +44,9 @@ class Script extends MyFormatter
         $html['last_login'] = $this->getLastLogin();
         $html['squad_name'] = $this->getSquadName();
         $html['damage'] = $this->getDamage();
-        $html['spirit'] = $this->getSpirit();
-        $html['money'] = $this->getMoney();
-        $html['energy'] = $this->getEnergy();
+        $html['spirit'] = $this->getResourceData('spirit', 1, 6);
+        $html['money'] = $this->getResourceData('money', 1, 5);
+        $html['energy'] = $this->getResourceData('energy', 1, 19);
         $html['decks_count'] = $this->getDecksCount();
 
         if ($html['last_login'] < 0) {
@@ -61,6 +74,75 @@ class Script extends MyFormatter
     public function getMaxLevel(): int
     {
         return $this->getValue($this->getExperience(), 'max_level', 0);
+    }
+
+    /**
+     * @param $array
+     * @param $key
+     * @param null $default
+     * @return mixed
+     */
+    public function getValue($array, $key, $default = null)
+    {
+        if (is_array($key)) {
+            $lastKey = array_pop($key);
+            foreach ($key as $keyPart) {
+                $array = $this->getValue($array, $keyPart);
+            }
+            $key = $lastKey;
+        }
+        if (is_array($array) && (isset($array[$key]) || array_key_exists($key, $array))) {
+            return $array[$key];
+        }
+        if (($pos = strrpos($key, '.')) !== false) {
+            $array = $this->getValue($array, substr($key, 0, $pos), $default);
+            $key = substr($key, $pos + 1);
+        }
+        if (is_object($array)) {
+            // this is expected to fail if the property does not exist, or __get() is not implemented
+            // it is not reliably possible to check whether a property is accessible beforehand
+            return $array->$key;
+        } elseif (is_array($array)) {
+            return (isset($array[$key]) || array_key_exists($key, $array)) ? $array[$key] : $default;
+        }
+
+        return $default;
+    }
+
+    /**
+     * @return array
+     */
+    public function getExperience(): array
+    {
+        $value = $this->getValue($this->getExperiences(), 'experience', []);
+
+        return is_array($value) ? $value : [];
+    }
+
+    /**
+     * @return array
+     */
+    public function getExperiences(): array
+    {
+        return $this->getValue($this->getUserModel(), 'experiences', []);
+    }
+
+    /**
+     * @return array
+     */
+    public function getUserModel(): array
+    {
+        return !empty($this->userModel) ? $this->userModel : [];
+    }
+
+    /**
+     * @param array $model
+     */
+    public function setUserModel(array $model): void
+    {
+        if (!empty($model) && is_array($model) && $this->isValidModel($model)) {
+            $this->userModel = $model;
+        }
     }
 
     /**
@@ -180,66 +262,6 @@ class Script extends MyFormatter
     public function getInterimResources(): array
     {
         return $this->getValue($this->getUserModel(), 'interim_resources', []);
-    }
-
-    /**
-     * @param $array
-     * @param $key
-     * @param null $default
-     * @return mixed
-     */
-    public function getValue($array, $key, $default = null)
-    {
-        if (is_array($key)) {
-            $lastKey = array_pop($key);
-            foreach ($key as $keyPart) {
-                $array = $this->getValue($array, $keyPart);
-            }
-            $key = $lastKey;
-        }
-        if (is_array($array) && (isset($array[$key]) || array_key_exists($key, $array))) {
-            return $array[$key];
-        }
-        if (($pos = strrpos($key, '.')) !== false) {
-            $array = $this->getValue($array, substr($key, 0, $pos), $default);
-            $key = substr($key, $pos + 1);
-        }
-        if (is_object($array)) {
-            // this is expected to fail if the property does not exist, or __get() is not implemented
-            // it is not reliably possible to check whether a property is accessible beforehand
-            return $array->$key;
-        } elseif (is_array($array)) {
-            return (isset($array[$key]) || array_key_exists($key, $array)) ? $array[$key] : $default;
-        }
-
-        return $default;
-    }
-
-    /**
-     * @return array
-     */
-    public function getUserModel(): array
-    {
-        return !empty($this->userModel) ? $this->userModel : [];
-    }
-
-    /**
-     * @param array $model
-     */
-    public function setUserModel(array $model): void
-    {
-        if (!empty($model) && is_array($model) && $this->isValidModel($model)) {
-            $this->userModel = $model;
-        }
-    }
-
-    /**
-     * @param array $model
-     * @return bool
-     */
-    protected function isValidModel(array $model): bool
-    {
-        return array_key_exists('completed_categorized_achievements', $model) && array_key_exists('last_login', $model);
     }
 
     /**
@@ -385,24 +407,6 @@ class Script extends MyFormatter
     }
 
     /**
-     * @return array
-     */
-    public function getExperience(): array
-    {
-        $value = $this->getValue($this->getExperiences(), 'experience', []);
-
-        return is_array($value) ? $value : [];
-    }
-
-    /**
-     * @return array
-     */
-    public function getExperiences(): array
-    {
-        return $this->getValue($this->getUserModel(), 'experiences', []);
-    }
-
-    /**
      * @return int
      */
     public function getDivisionNumeric(): int
@@ -523,47 +527,27 @@ class Script extends MyFormatter
      */
     public function getDamage(): array
     {
-        $pack = (new Data)->get('damage');
+        $pack = $this->getData()->get('damage');
         $achievement = $this->getCompletedCategorizedAchievementData(29, 2);
 
-        $result = ['count' => 0, 'time' => $this->ts2date(0), 'ranks' => ''];
-
-        if ($achievement['index'] > 0) {
-            $result = [
-                'count' => $this->numFormat($pack[$achievement['index']]),
-                'time' => $this->ts2date($achievement['time']),
-                'ranks' => '',
-            ];
-        }
-
-        for ($k = 0, $x = 0; $k < 2; $k++) {
-            $result['ranks'] .= '<div id="ranks-line">';
-            for ($i = 0; $i < 25; $i++, $x++) {
-                $result['ranks'] .= '<div class="img_open"><img style="width: 10px;height: 10px;" src="images/rank_' . ($achievement['index'] >= $x ? 'open' : 'close') . '.png"></div>';
-            }
-            $result['ranks'] .= '</div>';
-        }
-
-        return $result;
+        return $this->getAchievementText($pack, $achievement);
     }
 
     /**
-     * @param int $timestamp
-     * @return string
+     * @return Data
      */
-    public function ts2date(int $timestamp): string
+    public function getData(): Data
     {
-        return date("d.m.Y в H:i:s", $timestamp);
+        return $this->data;
     }
 
     /**
+     * @param array $pack
+     * @param array $achievement
      * @return array
      */
-    public function getSpirit(): array
+    public function getAchievementText(array $pack, array $achievement): array
     {
-        $pack = (new Data)->get('spirit');
-        $achievement = $this->getCompletedCategorizedAchievementData(6, 1);
-
         $result = ['count' => 0, 'time' => $this->ts2date(0)];
 
         if ($achievement['index'] > 0) {
@@ -577,43 +561,17 @@ class Script extends MyFormatter
     }
 
     /**
+     * @param string $packKey
+     * @param int $c
+     * @param int $i
      * @return array
      */
-    public function getMoney(): array
+    public function getResourceData(string $packKey, int $c, int $i): array
     {
-        $pack = (new Data)->get('money');
-        $achievement = $this->getCompletedCategorizedAchievementData(5, 1);
+        $pack = $this->getData()->get($packKey);
+        $achievement = $this->getCompletedCategorizedAchievementData($i, $c);
 
-        $result = ['count' => 0, 'time' => $this->ts2date(0)];
-
-        if ($achievement['index'] > 0) {
-            $result = [
-                'count' => $this->numFormat($pack[$achievement['index']]),
-                'time' => $this->ts2date($achievement['time']),
-            ];
-        }
-
-        return $result;
-    }
-
-    /**
-     * @return array
-     */
-    public function getEnergy(): array
-    {
-        $pack = (new Data)->get('energy');
-        $achievement = $this->getCompletedCategorizedAchievementData(19, 1);
-
-        $result = ['count' => 0, 'time' => $this->ts2date(0)];
-
-        if ($achievement['index'] > 0) {
-            $result = [
-                'count' => $this->numFormat($pack[$achievement['index']]),
-                'time' => $this->ts2date($achievement['time']),
-            ];
-        }
-
-        return $result;
+        return $this->getAchievementText($pack, $achievement);
     }
 
     /**
@@ -643,20 +601,11 @@ class Script extends MyFormatter
      */
     public function getWeapon(int $wpn): array
     {
-        $pack = (new Data)->get('weapons');
+        $pack = $this->getData()->get('weapons');
         $indexes = [3 => 6, 4 => 7, 5 => 8, 6 => 9, 7 => 10, 8 => 11, 9 => 12];
         $achievement = $this->getCompletedCategorizedAchievementData($indexes[$wpn], 2);
 
-        $result = ['count' => 0, 'time' => $this->ts2date(0)];
-
-        if ($achievement['index'] > 0) {
-            $result = [
-                'count' => $this->numFormat($pack[$achievement['index']]),
-                'time' => $this->ts2date($achievement['time']),
-            ];
-        }
-
-        return $result;
+        return $this->getAchievementText($pack, $achievement);
     }
 
     /**
@@ -665,20 +614,11 @@ class Script extends MyFormatter
      */
     public function getGuildWeapon(int $wpn): array
     {
-        $pack = (new Data)->get('weapons');
+        $pack = $this->getData()->get('weapons');
         $indexes = [0, 1, 2];
         $achievement = $this->getCompletedCategorizedAchievementData($indexes[$wpn], 5);
 
-        $result = ['count' => 0, 'time' => $this->ts2date(0)];
-
-        if ($achievement['index'] > 0) {
-            $result = [
-                'count' => $this->numFormat($pack[$achievement['index']]),
-                'time' => $this->ts2date($achievement['time']),
-            ];
-        }
-
-        return $result;
+        return $this->getAchievementText($pack, $achievement);
     }
 
     /**
@@ -687,19 +627,19 @@ class Script extends MyFormatter
      */
     public function getGuildResources(int $resource): array
     {
-        $pack = (new Data)->get('guild');
+        $pack = $this->getData()->get('guild');
         $indexes = [3, 4];
         $achievement = $this->getCompletedCategorizedAchievementData($indexes[$resource], 5);
 
-        $result = ['count' => 0, 'time' => $this->ts2date(0)];
+        return $this->getAchievementText($pack, $achievement);
+    }
 
-        if ($achievement['index'] > 0) {
-            $result = [
-                'count' => $this->numFormat($pack[$achievement['index']]),
-                'time' => $this->ts2date($achievement['time']),
-            ];
-        }
-
-        return $result;
+    /**
+     * @param array $model
+     * @return bool
+     */
+    protected function isValidModel(array $model): bool
+    {
+        return array_key_exists('completed_categorized_achievements', $model) && array_key_exists('last_login', $model);
     }
 }
