@@ -360,7 +360,7 @@ class Script
      */
     public function getStatusInfo(): string
     {
-        return ($this->isActiveStatus() ? $this->asDuration($this->getStatusTime() - time()) : 'не активна');
+        return ($this->isActiveStatus() ? $this->asDuration($this->getStatusTime() - time(), true) : 'не активна');
     }
 
     /**
@@ -398,10 +398,14 @@ class Script
         $html['talents'] = $this->getUsedTalents();
         $html['army'] = $this->getArmyStrength();
         $html['status']['level'] = $this->getStatusLevel();
+        $html['status']['active'] = $this->isActiveStatus();
         $html['srut'] = $this->getSrutAmount();
         $html['last_login'] = $this->getLastLogin();
         $html['squad_name'] = $this->getSquadName();
         $html['damage'] = $this->getDamage();
+        $html['spirit'] = $this->getSpirit();
+        $html['money'] = $this->getMoney();
+        $html['energy'] = $this->getEnergy();
         $html['decks_count'] = $this->getDecksCount();
 
         if ($html['last_login'] < 0) {
@@ -414,6 +418,10 @@ class Script
 
         for ($k = 0; $k < 3; $k++) {
             $html['guild_weapons'][$k] = $this->getGuildWeapon($k);
+        }
+
+        for ($k = 0; $k < 2; $k++) {
+            $html['guild_resources'][$k] = $this->getGuildResources($k);
         }
 
         return $html;
@@ -466,7 +474,7 @@ class Script
             if ($this->getExperienceAmount() >= $exp) {
                 $result = [
                     'name' => $packNames[$index] . ' дивизион',
-                    'icon' => 'images/div_' . $index . '.png'
+                    'icon' => 'icons/div_' . $index . '.png'
                 ];
             }
         }
@@ -475,13 +483,13 @@ class Script
     }
 
     /**
-     * @return int
+     * @return string
      */
-    public function getLastLogin(): int
+    public function getLastLogin(): string
     {
-        $value = $this->getValue($this->getUserModel(), 'last_login', -1);
+        $value = $this->getValue($this->getUserModel(), 'last_login');
 
-        return is_numeric($value) ? $value : -1;
+        return $value !== null ? $this->asDuration(time() - $value) . ' назад' : 'никогда';
     }
 
     public function getExpData (): array {
@@ -573,13 +581,22 @@ class Script
         $pack = (new Data)->get('damage');
         $achievement = $this->getCompletedCategorizedAchievementData(29, 2);
 
-        $result = ['count' => 0, 'time' => $this->ts2date(0)];
+        $result = ['count' => 0, 'time' => $this->ts2date(0), 'ranks' => ''];
 
         if ($achievement['index'] > 0) {
             $result = [
                 'count' => $this->numFormat($pack[$achievement['index']]),
                 'time' => $this->ts2date($achievement['time']),
+                'ranks' => '',
             ];
+        }
+
+        for ($k = 0, $x = 0; $k < 2; $k++) {
+            $result['ranks'] .= '<div id="ranks-line">';
+            for ($i = 0; $i < 25; $i++, $x++) {
+                $result['ranks'] .= '<div class="img_open"><img style="width: 10px;height: 10px;" src="images/rank_' . ($achievement['index'] >= $x ? 'open' : 'close') . '.png"></div>';
+            }
+            $result['ranks'] .= '</div>';
         }
 
         return $result;
@@ -592,7 +609,7 @@ class Script
     public function getWeapon(int $wpn): array {
         $pack = (new Data)->get('weapons');
         $indexes = [3 => 6, 4 => 7, 5 => 8, 6 => 9, 7 => 10, 8 => 11, 9 => 12];
-        $achievement = $this->getCompletedCategorizedAchievementData($indexes[$wpn], 1);
+        $achievement = $this->getCompletedCategorizedAchievementData($indexes[$wpn], 2);
 
         $result = ['count' => 0, 'time' => $this->ts2date(0)];
 
@@ -628,10 +645,31 @@ class Script
     }
 
     /**
+     * @param int $resource
+     * @return array
+     */
+    public function getGuildResources(int $resource): array {
+        $pack = (new Data)->get('guild');
+        $indexes = [3, 4];
+        $achievement = $this->getCompletedCategorizedAchievementData($indexes[$resource], 5);
+
+        $result = ['count' => 0, 'time' => $this->ts2date(0)];
+
+        if ($achievement['index'] > 0) {
+            $result = [
+                'count' => $this->numFormat($pack[$achievement['index']]),
+                'time' => $this->ts2date($achievement['time']),
+            ];
+        }
+
+        return $result;
+    }
+
+    /**
      * @param int $timestamp
      * @return string
      */
-    public function asDuration(int $timestamp): string
+    public function asDuration(int $timestamp, bool $short = false): string
     {
         $time = '';
 
@@ -658,7 +696,7 @@ class Script
 
         foreach ($strtime as $time_key => $time_value) {
             if ($time_value > 0 && is_numeric($time_value)) {
-                $result[] = $time_value . ' ' . $plurals[$time_key][$this->plural($time_value)];
+                $result[] = $time_value . ' ' . ($short ? mb_substr($plurals[$time_key][$this->plural($time_value)], 0, 1): $plurals[$time_key][$this->plural($time_value)]);
             }
         }
 

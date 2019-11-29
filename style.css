@@ -555,11 +555,12 @@ input[type="submit"] {
 .info .ranks .img_open {
     float: left;
     padding: 0;
-    margin-left: 3.6px;
+    margin-left: 2.5px;
 }
 
 .info .ranks #ranks-line {
     display: flex;
+    margin-top: 3px;
     width: 312px;
 }
 
