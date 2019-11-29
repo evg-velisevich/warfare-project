@@ -1,34 +1,163 @@
 <html lang="ru">
-    <head>
-        <link rel="stylesheet" type="text/css" href="style.css?__v=1.0">
-        <link rel="shortcut icon" href="icons/favicon.ico" type="image/x-icon">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Просмотр игровой статистики</title>
-        <meta name="description" content="В окопе, в окопе, скрипт в окопе, мобильный скрипт в окопе, в окопе">
-        <meta charset="utf-8">
-    </head>
-    <body>
-        <div id="container">
-            <div id="line-head">
-                <label>
-                    <input type="text" placeholder="ID/Ссылка" required autocomplete="on">
-                </label>
-                <label for="game"></label>
-                <select id="game">
-                    <option value="okop">В окопе</option>
-                    <option value="ok_okop">В окопе OK</option>
-                    <option value="fb_okop">В окопе FB</option>
-                    <option value="mail_okop">В окопе Mail</option>
-                </select>
-                <input type="submit" id="show" value="Показать инфу">
-            </div>
-            <div class="header">
-                <div id="label-header">
-                    <b><a target="_blank" href="//vk.com/mobi_scripts">GetInfo Mobi 2016-2019</a></b>
-                </div>
-                <div id="loader-script"></div>
-            </div>
-            <div class="frame"></div>
+<head>
+    <link rel="stylesheet" type="text/css" href="style.css?__v=1.0">
+    <link rel="shortcut icon" href="icons/favicon.ico" type="image/x-icon">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Просмотр игровой статистики</title>
+    <meta name="description" content="В окопе, в окопе, скрипт в окопе, мобильный скрипт в окопе, в окопе">
+    <meta charset="utf-8">
+</head>
+<body>
+<div id="container">
+    <div id="line-head">
+        <label>
+            <input type="text" placeholder="ID/Ссылка" required autocomplete="on">
+        </label>
+        <label for="game"></label>
+        <select id="game">
+            <option value="okop">В окопе</option>
+            <option value="ok_okop">В окопе OK</option>
+            <option value="fb_okop">В окопе FB</option>
+            <option value="mail_okop">В окопе Mail</option>
+        </select>
+        <input type="submit" id="show" value="Показать инфу">
+    </div>
+    <div class="header">
+        <div id="label-header">
+            <b><a target="_blank" href="//vk.com/mobi_scripts">GetInfo Mobi 2016-2019</a></b>
         </div>
-    </body>
+        <div id="loader-script"></div>
+    </div>
+    <div class="frame">
+        <div class="info">
+            <div class="level">0</div>
+            <div class="army">0</div>
+            <div class="ach_t">0</div>
+            <div class="talents">0</div>
+            <div class="exp" title="До след. уровня осталось: 0">
+                <div class="exp_line" style="width: 0%;"></div>
+                <div class="exp_text">0%</div>
+            </div>
+            <div class="name">...</div>
+            <div class="level_div">
+                <img src="http://mobi-scripts.ru/images/div_0.png" style="width:38px;height:38px;" alt="">
+            </div>
+            <div class="level_div_text">1</div>
+            <div class="div_name_text_user">...</div>
+            <div class="login">Последний вход в игру: ...</div>
+            <div class="damage" title="">0 [0]</div>
+            <div class="c_tech">0</div>
+            <div class="srut">0</div>
+            <div class="pvp"><b></b></div>
+            <div class="pvplvl">Рота: ...</div>
+            <div class="pvp_c">Элита:<br>Еще:</div>
+            <div class="pvp_cnt">не активна<br>...</div>
+            <div class="snaba" title="">0</div>
+            <div class="rubli" title="">0</div>
+            <div class="spirit" title="">0</div>
+            <div class="wpn1" title="">0</div>
+            <div class="wpn2" title="">0</div>
+            <div class="wpn3" title="">0</div>
+            <div class="wpn4" title="">0</div>
+            <div class="wpn5" title="">0</div>
+            <div class="wpn6" title="">0</div>
+            <div class="wpn7" title="">0</div>
+            <div class="wpn3_new" title="">0</div>
+            <div class="wpn4_new" title="">0</div>
+            <div class="wpn5_new" title="">0</div>
+            <div class="wpn6_new" title="">0</div>
+            <div class="wpn7_new" title="">0</div>
+            <div class="ranks">
+                <div id="ranks-line">
+                    <div class="img_open">
+                        <img style="width: 12px;height: 12px;" src="http://mobi-scripts.ru/images/rank_open.png">
+                    </div>
+                    <div class="img_open"><img style="width: 12px;height: 12px;"
+                                               src="http://mobi-scripts.ru/images/rank_open.png"></div>
+                    <div class="img_open"><img style="width: 12px;height: 12px;"
+                                               src="http://mobi-scripts.ru/images/rank_open.png"></div>
+                    <div class="img_open"><img style="width: 12px;height: 12px;"
+                                               src="http://mobi-scripts.ru/images/rank_open.png"></div>
+                    <div class="img_open"><img style="width: 12px;height: 12px;"
+                                               src="http://mobi-scripts.ru/images/rank_open.png"></div>
+                    <div class="img_open"><img style="width: 12px;height: 12px;"
+                                               src="http://mobi-scripts.ru/images/rank_open.png"></div>
+                    <div class="img_open"><img style="width: 12px;height: 12px;"
+                                               src="http://mobi-scripts.ru/images/rank_open.png"></div>
+                    <div class="img_open"><img style="width: 12px;height: 12px;"
+                                               src="http://mobi-scripts.ru/images/rank_open.png"></div>
+                    <div class="img_open"><img style="width: 12px;height: 12px;"
+                                               src="http://mobi-scripts.ru/images/rank_open.png"></div>
+                    <div class="img_open"><img style="width: 12px;height: 12px;"
+                                               src="http://mobi-scripts.ru/images/rank_open.png"></div>
+                    <div class="img_open"><img style="width: 12px;height: 12px;"
+                                               src="http://mobi-scripts.ru/images/rank_open.png"></div>
+                    <div class="img_open"><img style="width: 12px;height: 12px;"
+                                               src="http://mobi-scripts.ru/images/rank_open.png"></div>
+                    <div class="img_open"><img style="width: 12px;height: 12px;"
+                                               src="http://mobi-scripts.ru/images/rank_open.png"></div>
+                    <div class="img_open"><img style="width: 12px;height: 12px;"
+                                               src="http://mobi-scripts.ru/images/rank_open.png"></div>
+                    <div class="img_open"><img style="width: 12px;height: 12px;"
+                                               src="http://mobi-scripts.ru/images/rank_open.png"></div>
+                    <div class="img_open"><img style="width: 12px;height: 12px;"
+                                               src="http://mobi-scripts.ru/images/rank_open.png"></div>
+                    <div class="img_open"><img style="width: 12px;height: 12px;"
+                                               src="http://mobi-scripts.ru/images/rank_open.png"></div>
+                    <div class="img_open"><img style="width: 12px;height: 12px;"
+                                               src="http://mobi-scripts.ru/images/rank_open.png"></div>
+                    <div class="img_open"><img style="width: 12px;height: 12px;"
+                                               src="http://mobi-scripts.ru/images/rank_open.png"></div>
+                    <div class="img_open"><img style="width: 12px;height: 12px;"
+                                               src="http://mobi-scripts.ru/images/rank_open.png"></div>
+                </div>
+                <div id="ranks-line">
+                    <div class="img_open"><img style="width: 12px;height: 12px;"
+                                               src="http://mobi-scripts.ru/images/rank_close.png"></div>
+                    <div class="img_open"><img style="width: 12px;height: 12px;"
+                                               src="http://mobi-scripts.ru/images/rank_close.png"></div>
+                    <div class="img_open"><img style="width: 12px;height: 12px;"
+                                               src="http://mobi-scripts.ru/images/rank_close.png"></div>
+                    <div class="img_open"><img style="width: 12px;height: 12px;"
+                                               src="http://mobi-scripts.ru/images/rank_close.png"></div>
+                    <div class="img_open"><img style="width: 12px;height: 12px;"
+                                               src="http://mobi-scripts.ru/images/rank_close.png"></div>
+                    <div class="img_open"><img style="width: 12px;height: 12px;"
+                                               src="http://mobi-scripts.ru/images/rank_close.png"></div>
+                    <div class="img_open"><img style="width: 12px;height: 12px;"
+                                               src="http://mobi-scripts.ru/images/rank_close.png"></div>
+                    <div class="img_open"><img style="width: 12px;height: 12px;"
+                                               src="http://mobi-scripts.ru/images/rank_close.png"></div>
+                    <div class="img_open"><img style="width: 12px;height: 12px;"
+                                               src="http://mobi-scripts.ru/images/rank_close.png"></div>
+                    <div class="img_open"><img style="width: 12px;height: 12px;"
+                                               src="http://mobi-scripts.ru/images/rank_close.png"></div>
+                    <div class="img_open"><img style="width: 12px;height: 12px;"
+                                               src="http://mobi-scripts.ru/images/rank_close.png"></div>
+                    <div class="img_open"><img style="width: 12px;height: 12px;"
+                                               src="http://mobi-scripts.ru/images/rank_close.png"></div>
+                    <div class="img_open"><img style="width: 12px;height: 12px;"
+                                               src="http://mobi-scripts.ru/images/rank_close.png"></div>
+                    <div class="img_open"><img style="width: 12px;height: 12px;"
+                                               src="http://mobi-scripts.ru/images/rank_close.png"></div>
+                    <div class="img_open"><img style="width: 12px;height: 12px;"
+                                               src="http://mobi-scripts.ru/images/rank_close.png"></div>
+                    <div class="img_open"><img style="width: 12px;height: 12px;"
+                                               src="http://mobi-scripts.ru/images/rank_close.png"></div>
+                    <div class="img_open"><img style="width: 12px;height: 12px;"
+                                               src="http://mobi-scripts.ru/images/rank_close.png"></div>
+                    <div class="img_open"><img style="width: 12px;height: 12px;"
+                                               src="http://mobi-scripts.ru/images/rank_close.png"></div>
+                    <div class="img_open"><img style="width: 12px;height: 12px;"
+                                               src="http://mobi-scripts.ru/images/rank_close.png"></div>
+                    <div class="img_open"><img style="width: 12px;height: 12px;"
+                                               src="http://mobi-scripts.ru/images/rank_close.png"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
+<script src="engine/script.js"></script>
+</body>
 </html>
