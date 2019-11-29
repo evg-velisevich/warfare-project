@@ -62,7 +62,7 @@ class Ajax
      * @return bool
      */
     public function isValidRequest (): bool {
-        return isset($_GET) && array_key_exists('user_id', $_GET);
+        return isset($_GET) && array_key_exists('user_id', $_GET) && is_numeric($_GET['user_id']);
     }
 
     /**
@@ -74,16 +74,16 @@ class Ajax
 
         $game->setActiveNet('vk');
 
-        //for ($k = 0; $k < 3; $k++) {
+        for ($k = 0; $k < 3; $k++) {
             $socialPack = $game->socialGet($_GET['user_id']);
             if ($game->isCorrectPack($socialPack, $_GET['user_id'])) {
                 $script->setUserModel(json_decode($socialPack[0][0][1], true));
                 $this->setResponse($script->renderHtml());
-                //break;
+                break;
             } else {
-                $this->setError('not have data');
-                //usleep(.5 * 1000 * 1000);
+                $this->setError('Информация не получена...');
+                usleep(.5 * 1000 * 1000);
             }
-        //}
+        }
     }
 }
