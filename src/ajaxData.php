@@ -1,6 +1,7 @@
 <?php
+include '../../vendor/autoload.php';
 
-require_once "Ajax.php";
+use src\Script\Ajax;
 
 ini_set("display_errors", "On");
 error_reporting(E_ALL);
@@ -16,4 +17,4 @@ if ($ajax->isValidRequest()) {
     $ajax->setError('Неверный запрос');
 }
 
-$ajax->printResponse();
+print_r($ajax->getReady());

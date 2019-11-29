@@ -3,7 +3,7 @@
  */
 $(document).ready(() => {
     $("#show").click(() => {
-        $.getJSON("engine/ajaxData.php", {"user_id": $("#userID").val()}, (response) => {
+        $.getJSON("src/ajaxData.php", {"user_id": $("#userID").val()}, (response) => {
             if (response.error === false) {
                 Script.show(response.response);
             } else {

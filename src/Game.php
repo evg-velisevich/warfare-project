@@ -1,22 +1,38 @@
 <?php
 
-ini_set("display_errors", "On");
-error_reporting(E_ALL);
+namespace src\Script;
+
+use Exception;
 
 class Game
 {
-    private $auth_key = '',
-            $user_id = '',
-            $ch,
-            $active_net = 'vk';
+    /**
+     * @var string
+     */
+    private $auth_key = '';
+
+    /**
+     * @var string
+     */
+    private $user_id = '';
+
+    /**
+     * @var false|resource
+     */
+    private $ch;
+
+    /**
+     * @var string
+     */
+    private $active_net = 'vk';
 
     /**
      * Constructor.
-     * @param $id
-     * @param $auth
+     * @param string $id
+     * @param string $auth
      * @throws Exception
      */
-    function __construct($id, $auth)
+    function __construct(string $id, string $auth)
     {
         if (!$this->ch) $this->ch = curl_init();
         if (!$id || !$auth) {
@@ -28,46 +44,52 @@ class Game
     }
 
     /**
-     * @param $user_id
+     * @param string $user_id
+     * @return Game
      */
-    function setUserID($user_id)
+    function setUserID(string $user_id): self
     {
         $this->user_id = $user_id;
+
+        return $this;
     }
 
     /**
-     * @param $net
+     * @param string $net
+     * @return Game
      */
-    public function setActiveNet($net)
+    public function setActiveNet(string $net): self
     {
         $this->active_net = $net;
+
+        return $this;
     }
 
     /**
-     * @param $userID
+     * @param string $userID
      * @return array
      */
-    public function socialGet($userID)
+    public function socialGet(string $userID): array
     {
-        $data = ['friends' => json_encode([(string)$userID])];
+        $data = ['friends' => json_encode([$userID])];
         return $this->gameApi('social_get', $data);
     }
 
     /**
-     * @param $package
-     * @param $params
+     * @param string $package
+     * @param array $params
      * @return array
      */
-    public function gameApi($package, $params)
+    public function gameApi(string $package, array $params): array
     {
         $url = 'http://' . $this->getServer() . '/' . $this->getUserID() . '/' . $this->getAuthKey() . '/' . $package;
         return $this->curlRequest($url, $params);
     }
 
     /**
-     * @return mixed
+     * @return string
      */
-    public function getServer()
+    public function getServer(): string
     {
         $servers = [
             'vk' => '5.178.83.92',
@@ -79,9 +101,9 @@ class Game
     }
 
     /**
-     * @return mixed
+     * @return string
      */
-    public function getActiveNet()
+    public function getActiveNet(): string
     {
         return $this->active_net;
     }
@@ -89,7 +111,7 @@ class Game
     /**
      * @return string
      */
-    public function getUserID()
+    public function getUserID(): string
     {
         return $this->user_id;
     }
@@ -97,25 +119,25 @@ class Game
     /**
      * @return string
      */
-    public function getAuthKey()
+    public function getAuthKey(): string
     {
         return $this->auth_key;
     }
 
     /**
-     * @param $auth_key
+     * @param string $auth_key
      */
-    public function setAuthKey($auth_key)
+    public function setAuthKey(string $auth_key): void
     {
         $this->auth_key = $auth_key;
     }
 
     /**
-     * @param $url
-     * @param $data
+     * @param string $url
+     * @param mixed $data
      * @return array
      */
-    public function curlRequest($url, $data)
+    public function curlRequest(string $url, $data): array
     {
         curl_setopt($this->ch, CURLOPT_URL, $url);
         curl_setopt($this->ch, CURLOPT_RETURNTRANSFER, 1);
@@ -124,14 +146,18 @@ class Game
         curl_setopt($this->ch, CURLOPT_USERAGENT, 'Mozilla/5.0 (Windows; U;Windows NT 5.1;en-US; rv:1.9.0.3) Gecko/2008092417 Firefox/3.0.3');
         curl_setopt($this->ch, CURLOPT_POST, 1);
         curl_setopt($this->ch, CURLOPT_POSTFIELDS, is_array($data) ? http_build_query($data) : $data);
-        $res = [
+        return [
             json_decode(curl_exec($this->ch), true),
             curl_getinfo($this->ch)
         ];
-        return $res;
     }
 
-    public function isCorrectPack($pack, $userID)
+    /**
+     * @param array $pack
+     * @param $userID
+     * @return bool
+     */
+    public function isCorrectPack(array $pack, $userID): bool
     {
         return (is_array($pack) && (new Script)->getValue($pack, [0, 0, 0]) === $userID);
     }

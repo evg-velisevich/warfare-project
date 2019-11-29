@@ -1,9 +1,8 @@
 <?php
 
-ini_set("display_errors", "On");
-error_reporting(E_ALL);
+namespace src\Script;
 
-class Script
+class Script extends MyFormatter
 {
 
     protected $userModel = [];
@@ -351,57 +350,6 @@ class Script
         return ($this->isActiveStatus() ? $this->asDuration($this->getStatusTime() - time(), true) : 'не активна');
     }
 
-    /**
-     * @param int $timestamp
-     * @return string
-     */
-    public function asDuration(int $timestamp, bool $short = false): string
-    {
-        $time = '';
-
-        $plurals = [
-            'd' => ['день', 'дня', 'дней'],
-            'h' => ['час', 'часа', 'часов'],
-            'm' => ['минута', 'минуты', 'минут'],
-            's' => ['секунда', 'секунды', 'секунд']
-        ];
-
-        $strtime = [
-            'd' => '',
-            'h' => '',
-            'm' => '',
-            's' => ''
-        ];
-
-        $strtime['d'] = ($timestamp >= 86400 ? floor($timestamp / 86400) : false);
-        $strtime['h'] = ($timestamp >= 3600 ? floor(($timestamp % 86400) / 3600) : false);
-        $strtime['m'] = ($timestamp >= 60 ? floor(($timestamp % 3600) / 60) : false);
-        $strtime['s'] = ($timestamp > 0 ? $timestamp % 60 : false);
-
-        $result = [];
-
-        foreach ($strtime as $time_key => $time_value) {
-            if ($time_value > 0 && is_numeric($time_value)) {
-                $result[] = $time_value . ' ' . ($short ? mb_substr($plurals[$time_key][$this->plural($time_value)], 0, 1) : $plurals[$time_key][$this->plural($time_value)]);
-            }
-        }
-
-        if (count($result)) $time = implode(" ", $result);
-
-        return $time;
-    }
-
-    /**
-     * @param int $n
-     * @return int
-     */
-    public function plural(int $n): int
-    {
-        if ($n % 10 == 1 && $n % 100 != 11) return 0;
-        else if ($n % 10 >= 2 && $n % 10 <= 4 && ($n % 100 < 10 || $n % 100 >= 20)) return 1;
-        else return 2;
-    }
-
     public function getExpData(): array
     {
         $result = [
@@ -455,15 +403,6 @@ class Script
     }
 
     /**
-     * @param int $number
-     * @return string
-     */
-    public function numFormat(int $number): string
-    {
-        return number_format($number, 0, '', ' ');
-    }
-
-    /**
      * @return int
      */
     public function getDivisionNumeric(): int
@@ -486,6 +425,10 @@ class Script
     {
         $pack = (new Data)->get('divisions');
         $packNames = (new Data)->get('names');
+        $result = [
+            'name' => '',
+            'time' => '0'
+        ];
 
         foreach ($pack as $index => $exp) {
             if ($this->getExperienceAmount() >= $exp) {
