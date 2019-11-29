@@ -1,4 +1,3 @@
-<pre>
 <?php
 
 require_once "Ajax.php";
@@ -19,4 +18,3 @@ if ($ajax->isValidRequest()) {
 
 $ajax->printResponse();
 ?>
-</pre>
