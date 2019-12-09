@@ -120,8 +120,6 @@ class Game
             curl_getinfo($this->ch)
         ];
 
-        curl_close($this->ch);
-
         return $result;
     }
 

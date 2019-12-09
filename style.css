@@ -3,6 +3,10 @@
     src: url(fonts/DINCondensed.ttf);
 }
 
+* {
+    font-family: Arial, serif !important;
+}
+
 body {
     background-image: url(images/body.png);
     margin: 0;

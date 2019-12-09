@@ -237,7 +237,9 @@ class Script extends MyFormatter
      */
     public function getUserGuild(): array
     {
-        return $this->getValue($this->getUserModel(), 'user_guild', []);
+        $guild =  $this->getValue($this->getUserModel(), 'user_guild', []);
+
+        return is_array($guild) ? $guild : [];
     }
 
     /**
@@ -530,7 +532,19 @@ class Script extends MyFormatter
         $pack = $this->getData()->get('damage');
         $achievement = $this->getCompletedCategorizedAchievementData(29, 2);
 
-        return $this->getAchievementText($pack, $achievement);
+        $result = $this->getAchievementText($pack, $achievement);
+        $result['ranks'] = '';
+
+        for ($k = 0, $i = 0; $k < 2; $k++) {
+            $result['ranks'] .= '<div id="ranks-line">';
+            for ($x = 0; $x < 31; $x++, $i++) {
+                $img = ($achievement['index'] >= $i ? 'rank_open.png' : 'rank_close.png');
+                $result['ranks'] .= '<img style="width: 10px;height: 10px;" src="images/' . $img . '">';
+            }
+            $result['ranks'] .= '</div>';
+        }
+
+        return $result;
     }
 
     /**
