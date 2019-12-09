@@ -17,4 +17,4 @@ if ($ajax->isValidRequest()) {
     $ajax->setError('Неверный запрос');
 }
 
-print_r($ajax->getReady());
+print_r($ajax->getReady()); // Get ready response

@@ -39,14 +39,14 @@ class ViewData
     public function prepare (): self
     {
         for ($k = 0; $k < 3; $k++) {
-            $socialPack = $this->game->socialGet($_GET['user_id']);
+            $socialPack = $this->game->socialGet($_GET['user_id']); // Get social_get package
             if ($this->game->isCorrectPack($socialPack, $_GET['user_id'])) {
                 $this->script->setUserModel(json_decode($socialPack[0][0][1], true));
                 $this->data = $this->script->renderHtml();
                 break;
             }
 
-            usleep(.5 * 1000 * 1000);
+            usleep(1.01 * 1000 * 1000);
         }
         return $this;
     }

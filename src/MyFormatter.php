@@ -12,6 +12,8 @@ class MyFormatter
      */
     private $plurals = ['d' => ['день', 'дня', 'дней'], 'h' => ['час', 'часа', 'часов'], 'm' => ['минута', 'минуты', 'минут'], 's' => ['секунда', 'секунды', 'секунд']];
 
+    // TODO: Maintenance index >90
+
     /**
      * @param int $number
      * @return string
@@ -29,49 +31,13 @@ class MyFormatter
     public function asDuration(int $timestamp, bool $short = false): string
     {
         $stringTime = [
-            'd' => $this->getDaysByTimeStamp($timestamp),
-            'h' => $this->getHoursByTimeStamp($timestamp),
-            'm' => $this->getMinutesByTimestamp($timestamp),
-            's' => $this->getSecondsByTimestamp($timestamp),
+            'd' => ($timestamp >= 86400 ? floor($timestamp / 86400) : false),
+            'h' => ($timestamp >= 3600 ? floor(($timestamp % 86400) / 3600) : false),
+            'm' => ($timestamp >= 60 ? floor(($timestamp % 3600) / 60) : false),
+            's' => ($timestamp > 0 ? $timestamp % 60 : false),
         ];
 
         return implode(" ", $this->getParsedTime($stringTime, $short));
-    }
-
-    /**
-     * @param int $timestamp
-     * @return int
-     */
-    public function getDaysByTimeStamp(int $timestamp): int
-    {
-        return ($timestamp >= 86400 ? floor($timestamp / 86400) : false);
-    }
-
-    /**
-     * @param int $timestamp
-     * @return int
-     */
-    public function getHoursByTimeStamp(int $timestamp): int
-    {
-        return ($timestamp >= 3600 ? floor(($timestamp % 86400) / 3600) : false);
-    }
-
-    /**
-     * @param int $timestamp
-     * @return int
-     */
-    public function getMinutesByTimestamp(int $timestamp): int
-    {
-        return ($timestamp >= 60 ? floor(($timestamp % 3600) / 60) : false);
-    }
-
-    /**
-     * @param int $timestamp
-     * @return int
-     */
-    public function getSecondsByTimestamp(int $timestamp): int
-    {
-        return ($timestamp > 0 ? $timestamp % 60 : false);
     }
 
     /**
