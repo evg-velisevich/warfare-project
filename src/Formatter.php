@@ -1,18 +1,14 @@
 <?php
 
-
 namespace src\Script;
 
-
-class MyFormatter
+class Formatter
 {
 
     /**
      * @var array
      */
     private $plurals = ['d' => ['день', 'дня', 'дней'], 'h' => ['час', 'часа', 'часов'], 'm' => ['минута', 'минуты', 'минут'], 's' => ['секунда', 'секунды', 'секунд']];
-
-    // TODO: Maintenance index >90
 
     /**
      * @param int $number

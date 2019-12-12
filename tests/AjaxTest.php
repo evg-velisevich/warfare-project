@@ -1,38 +1,29 @@
 <?php
 
-namespace src\Script;
 
+use src\Script\Ajax;
+use PHPUnit\Framework\TestCase;
 
-class AjaxTest extends \PHPUnit_Framework_TestCase
+class AjaxTest extends TestCase
 {
 
-    public function testStartRender()
+    public function testGetResponse()
     {
-
+        $class = (new Ajax())->getResponse();
+        $this->assertArrayHasKey('response', $class);
     }
 
     public function testGetReady()
     {
+        $class = new Ajax();
+        $class->setResponse(['test' => true]);
 
+        $this->assertInternalType('string', $class->getReady());
     }
 
-    public function testSetResponse()
+    public function testGetViewData()
     {
-
-    }
-
-    public function testIsValidRequest()
-    {
-
-    }
-
-    public function testGetResponse()
-    {
-
-    }
-
-    public function testSetError()
-    {
-
+        $class = (new Ajax())->getViewData();
+        $this->assertNotEmpty($class);
     }
 }

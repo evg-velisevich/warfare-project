@@ -3,8 +3,10 @@
 
 namespace src\Script;
 
+ini_set("display_errors", "On");
+error_reporting(E_ALL);
 
-class ViewData
+class ViewData extends App
 {
 
     /**
@@ -13,42 +15,77 @@ class ViewData
     private $data = [];
 
     /**
-     * @var Game
+     * @var Game|null
      */
     private $game = null;
 
     /**
-     * @var Script
+     * @var App|null
+     */
+    private $app = null;
+
+    /**
+     * @var Script|null
      */
     private $script = null;
 
     /**
-     * ViewData constructor.
-     * @param Script $script
-     * @param Game $game
-     */
-    function __construct(Script $script, Game $game)
-    {
-        $this->game = $game;
-        $this->script = $script;
-    }
-
-    /**
      * @return $this
+     * @throws \Exception
      */
     public function prepare (): self
     {
-        for ($k = 0; $k < 3; $k++) {
-            $socialPack = $this->game->socialGet($_GET['user_id']); // Get social_get package
-            if ($this->game->isCorrectPack($socialPack, $_GET['user_id'])) {
-                $this->script->setUserModel(json_decode($socialPack[0][0][1], true));
-                $this->data = $this->script->renderHtml();
-                break;
-            }
+        if ($this->getApp()->isGet() && $this->getApp()->isAjax()) {
+            for ($k = 0; $k < 3; $k++) {
+                $socialPack = $this->getGame()->socialGet($_GET['user_id']);
+                if ($this->getGame()->isCorrectPack($socialPack, $_GET['user_id'])) {
+                    $this->getApp()->setModel(json_decode($socialPack[0][0][1], true));
+                    $this->data = $this->getScript()->renderHtml();
+                    break;
+                }
 
-            usleep(1.01 * 1000 * 1000);
+                usleep(1.01 * 1000 * 1000);
+            }
         }
+
         return $this;
+    }
+
+    /**
+     * @return Script
+     */
+    private function getScript ()
+    {
+        if ($this->script === null) {
+            $this->script = new Script();
+        }
+
+        return $this->script;
+    }
+
+    /**
+     * @return Game
+     * @throws \Exception
+     */
+    private function getGame ()
+    {
+        if ($this->game === null) {
+            $this->game = new Game("415593668", "b497fa458ca25f40fc1d43fcdce9aee1");
+        }
+
+        return $this->game;
+    }
+
+    /**
+     * @return App
+     */
+    private function getApp ()
+    {
+        if ($this->app === null) {
+            $this->app = new App();
+        }
+
+        return $this->app;
     }
 
     /**

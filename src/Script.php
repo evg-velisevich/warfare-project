@@ -2,23 +2,23 @@
 
 namespace src\Script;
 
-class Script extends MyFormatter
+use dimsog\arrayhelper\ArrayHelper;
+
+ini_set("display_errors", "On");
+error_reporting(E_ALL);
+
+class Script extends Formatter
 {
 
     /**
      * @var array
      */
-    protected $userModel = [];
+    protected $userModel = null;
 
     /**
      * @var Data
      */
     private $data = null;
-
-    public function __construct()
-    {
-        $this->data = new Data();
-    }
 
     /**
      * @return array
@@ -73,40 +73,7 @@ class Script extends MyFormatter
      */
     public function getMaxLevel(): int
     {
-        return $this->getValue($this->getExperience(), 'max_level', 0);
-    }
-
-    /**
-     * @param $array
-     * @param $key
-     * @param null $default
-     * @return mixed
-     */
-    public function getValue($array, $key, $default = null)
-    {
-        if (is_array($key)) {
-            $lastKey = array_pop($key);
-            foreach ($key as $keyPart) {
-                $array = $this->getValue($array, $keyPart);
-            }
-            $key = $lastKey;
-        }
-        if (is_array($array) && (isset($array[$key]) || array_key_exists($key, $array))) {
-            return $array[$key];
-        }
-        if (($pos = strrpos($key, '.')) !== false) {
-            $array = $this->getValue($array, substr($key, 0, $pos), $default);
-            $key = substr($key, $pos + 1);
-        }
-        if (is_object($array)) {
-            // this is expected to fail if the property does not exist, or __get() is not implemented
-            // it is not reliably possible to check whether a property is accessible beforehand
-            return $array->$key;
-        } elseif (is_array($array)) {
-            return (isset($array[$key]) || array_key_exists($key, $array)) ? $array[$key] : $default;
-        }
-
-        return $default;
+        return ArrayHelper::getValue($this->getExperience(), 'max_level', 0);
     }
 
     /**
@@ -114,7 +81,7 @@ class Script extends MyFormatter
      */
     public function getExperience(): array
     {
-        $value = $this->getValue($this->getExperiences(), 'experience', []);
+        $value = ArrayHelper::getValue($this->getExperiences(), 'experience', []);
 
         return is_array($value) ? $value : [];
     }
@@ -124,7 +91,7 @@ class Script extends MyFormatter
      */
     public function getExperiences(): array
     {
-        return $this->getValue($this->getUserModel(), 'experiences', []);
+        return ArrayHelper::getValue($this->getUserModel(), 'experiences', []);
     }
 
     /**
@@ -132,17 +99,11 @@ class Script extends MyFormatter
      */
     public function getUserModel(): array
     {
-        return !empty($this->userModel) ? $this->userModel : [];
-    }
-
-    /**
-     * @param array $model
-     */
-    public function setUserModel(array $model): void
-    {
-        if (!empty($model) && is_array($model) && $this->isValidModel($model)) {
-            $this->userModel = $model;
+        if ($this->userModel === null) {
+            $this->userModel = new UserModel();
         }
+        
+        return $this->userModel;
     }
 
     /**
@@ -150,7 +111,7 @@ class Script extends MyFormatter
      */
     public function getAchievementsPoints(): int
     {
-        return $this->getValue($this->getStaticResources(), 'achievement_points', 0);
+        return ArrayHelper::getValue($this->getStaticResources(), 'achievement_points', 0);
     }
 
     /**
@@ -158,7 +119,7 @@ class Script extends MyFormatter
      */
     public function getStaticResources(): array
     {
-        return $this->getValue($this->getUserModel(), 'static_resources', []);
+        return ArrayHelper::getValue($this->getUserModel(), 'static_resources', []);
     }
 
     /**
@@ -229,7 +190,7 @@ class Script extends MyFormatter
      */
     public function getUserGuildLevel(): int
     {
-        return $this->getValue($this->getUserGuild(), 'level', 0);
+        return ArrayHelper::getValue($this->getUserGuild(), 'level', 0);
     }
 
     /**
@@ -237,7 +198,7 @@ class Script extends MyFormatter
      */
     public function getUserGuild(): array
     {
-        $guild =  $this->getValue($this->getUserModel(), 'user_guild', []);
+        $guild =  ArrayHelper::getValue($this->getUserModel(), 'user_guild', []);
 
         return is_array($guild) ? $guild : [];
     }
@@ -255,7 +216,7 @@ class Script extends MyFormatter
      */
     public function getStatusTime(): int
     {
-        return $this->getValue($this->getInterimResources(), 'status_time', 0);
+        return ArrayHelper::getValue($this->getInterimResources(), 'status_time', 0);
     }
 
     /**
@@ -263,7 +224,7 @@ class Script extends MyFormatter
      */
     public function getInterimResources(): array
     {
-        return $this->getValue($this->getUserModel(), 'interim_resources', []);
+        return ArrayHelper::getValue($this->getUserModel(), 'interim_resources', []);
     }
 
     /**
@@ -271,7 +232,7 @@ class Script extends MyFormatter
      */
     public function getStatusLevel(): int
     {
-        return $this->getValue($this->getStatus(), 'max_level', 0);
+        return ArrayHelper::getValue($this->getStatus(), 'max_level', 0);
     }
 
     /**
@@ -279,7 +240,7 @@ class Script extends MyFormatter
      */
     public function getStatus(): array
     {
-        return $this->getValue($this->getExperiences(), 'status', []);
+        return ArrayHelper::getValue($this->getExperiences(), 'status', []);
     }
 
     /**
@@ -288,7 +249,7 @@ class Script extends MyFormatter
      */
     public function getTalent(int $talent): int
     {
-        return $this->getValue($this->getTalents(), $talent, 0);
+        return ArrayHelper::getValue($this->getTalents(), $talent, 0);
     }
 
     /**
@@ -296,7 +257,7 @@ class Script extends MyFormatter
      */
     public function getTalents(): array
     {
-        return $this->getValue($this->getUserModel(), 'talents', []);
+        return ArrayHelper::getValue($this->getUserModel(), 'talents', []);
     }
 
     /**
@@ -323,14 +284,14 @@ class Script extends MyFormatter
         ];
 
         if ($achievementCategory > 0) {
-            if ($data = $this->getValue($array, [$achievementCategory, $achievementIndex])) {
+            if ($data = ArrayHelper::getValue($array, [$achievementCategory, $achievementIndex])) {
                 $result = [
                     'index' => $data[0],
                     'time' => $data[1],
                 ];
             }
         } else {
-            if ($data = $this->getValue($array, [$achievementIndex])) {
+            if ($data = ArrayHelper::getValue($array, [$achievementIndex])) {
                 $result = [
                     'index' => 0,
                     'time' => $data,
@@ -346,7 +307,7 @@ class Script extends MyFormatter
      */
     public function getCompletedCategorizedAchievements(): array
     {
-        return $this->getValue($this->getUserModel(), 'completed_categorized_achievements', []);
+        return ArrayHelper::getValue($this->getUserModel(), 'completed_categorized_achievements', []);
     }
 
     /**
@@ -363,7 +324,7 @@ class Script extends MyFormatter
      */
     private function getCompletedAchievements(): array
     {
-        return $this->getValue($this->getUserModel(), 'completed_achievements', []);
+        return ArrayHelper::getValue($this->getUserModel(), 'completed_achievements', []);
     }
 
     /**
@@ -382,7 +343,7 @@ class Script extends MyFormatter
             'percentage' => 100,
         ];
 
-        $pack = (new Data)->get('levels');
+        $pack = $this->getData()->get('levels');
         $level = $this->getMaxLevel();
 
         if ($level < count($pack)) {
@@ -405,7 +366,7 @@ class Script extends MyFormatter
      */
     public function getExperienceAmount(): int
     {
-        return $this->getValue($this->getExperience(), 'amount', 0);
+        return ArrayHelper::getValue($this->getExperience(), 'amount', 0);
     }
 
     /**
@@ -413,7 +374,7 @@ class Script extends MyFormatter
      */
     public function getDivisionNumeric(): int
     {
-        return $this->getValue($this->getDivision(), 'h_div', 0);
+        return ArrayHelper::getValue($this->getDivision(), 'h_div', 0);
     }
 
     /**
@@ -421,7 +382,7 @@ class Script extends MyFormatter
      */
     public function getDivision(): array
     {
-        return $this->getValue($this->getUserModel(), 'division', []);
+        return ArrayHelper::getValue($this->getUserModel(), 'division', []);
     }
 
     /**
@@ -429,8 +390,8 @@ class Script extends MyFormatter
      */
     public function getDivisionData(): array
     {
-        $pack = (new Data)->get('divisions');
-        $packNames = (new Data)->get('names');
+        $pack = $this->getData()->get('divisions');
+        $packNames = $this->getData()->get('names');
         $result = [
             'name' => '',
             'time' => '0'
@@ -453,7 +414,7 @@ class Script extends MyFormatter
      */
     public function getUserGuildID(): string
     {
-        return $this->getValue($this->getUserGuild(), 'id', '');
+        return ArrayHelper::getValue($this->getUserGuild(), 'id', '');
     }
 
     /**
@@ -461,7 +422,7 @@ class Script extends MyFormatter
      */
     public function getUsedTalents(): int
     {
-        return $this->getValue($this->getStaticResources(), 'used_talents', 0);
+        return ArrayHelper::getValue($this->getStaticResources(), 'used_talents', 0);
     }
 
     /**
@@ -469,7 +430,7 @@ class Script extends MyFormatter
      */
     public function getArmyStrength(): int
     {
-        return $this->getValue($this->getStaticResources(), 'army_strength', 0);
+        return ArrayHelper::getValue($this->getStaticResources(), 'army_strength', 0);
     }
 
     /**
@@ -477,7 +438,7 @@ class Script extends MyFormatter
      */
     public function getSrutAmount(): int
     {
-        return $this->getValue($this->getSrut(), 'amount', 0);
+        return ArrayHelper::getValue($this->getSrut(), 'amount', 0);
     }
 
     /**
@@ -485,7 +446,7 @@ class Script extends MyFormatter
      */
     public function getSrut(): array
     {
-        $value = $this->getValue($this->getStaticMaximumResources(), 'srut', []);
+        $value = ArrayHelper::getValue($this->getStaticMaximumResources(), 'srut', []);
 
         return is_array($value) ? $value : [];
     }
@@ -495,7 +456,7 @@ class Script extends MyFormatter
      */
     public function getStaticMaximumResources(): array
     {
-        return $this->getValue($this->getUserModel(), 'static_maximum_resources', []);
+        return ArrayHelper::getValue($this->getUserModel(), 'static_maximum_resources', []);
     }
 
     /**
@@ -503,7 +464,7 @@ class Script extends MyFormatter
      */
     public function getLastLogin(): string
     {
-        $value = $this->getValue($this->getUserModel(), 'last_login');
+        $value = ArrayHelper::getValue($this->getUserModel(), 'last_login');
 
         return $value !== null ? $this->asDuration(time() - $value) . ' назад' : 'никогда';
     }
@@ -513,7 +474,7 @@ class Script extends MyFormatter
      */
     public function getSquadName(): string
     {
-        return $this->getValue($this->getNames(), 'squad_name', 'Мой отряд');
+        return ArrayHelper::getValue($this->getNames(), 'squad_name', 'Мой отряд');
     }
 
     /**
@@ -521,7 +482,7 @@ class Script extends MyFormatter
      */
     public function getNames(): array
     {
-        return $this->getValue($this->getUserModel(), 'names', []);
+        return ArrayHelper::getValue($this->getUserModel(), 'names', []);
     }
 
     /**
@@ -552,6 +513,10 @@ class Script extends MyFormatter
      */
     public function getData(): Data
     {
+        if ($this->data === null) {
+            $this->data = new Data();
+        }
+        
         return $this->data;
     }
 
@@ -595,7 +560,7 @@ class Script extends MyFormatter
     {
 
         for ($k = 1, $decks = $this->getDecks(), $res = 0; $k < count($decks); $k++) {
-            $res += count($this->getValue($decks, [$k, 'parts'], []));
+            $res += count(ArrayHelper::getValue($decks, [$k, 'parts'], []));
         }
 
         return $res;
@@ -606,7 +571,7 @@ class Script extends MyFormatter
      */
     public function getDecks(): array
     {
-        return $this->getValue($this->getUserModel(), 'decks', []);
+        return ArrayHelper::getValue($this->getUserModel(), 'decks', []);
     }
 
     /**
@@ -646,14 +611,5 @@ class Script extends MyFormatter
         $achievement = $this->getCompletedCategorizedAchievementData($indexes[$resource], 5);
 
         return $this->getAchievementText($pack, $achievement);
-    }
-
-    /**
-     * @param array $model
-     * @return bool
-     */
-    protected function isValidModel(array $model): bool
-    {
-        return array_key_exists('completed_categorized_achievements', $model) && array_key_exists('last_login', $model);
     }
 }

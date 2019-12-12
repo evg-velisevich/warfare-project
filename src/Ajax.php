@@ -4,9 +4,11 @@ namespace src\Script;
 
 use Exception;
 
+ini_set("display_errors", "On");
+error_reporting(E_ALL);
+
 class Ajax
 {
-
     /**
      * @var array
      */
@@ -16,11 +18,22 @@ class Ajax
     ];
 
     /**
+     * @var ViewData|null
+     */
+    private $viewData = null;
+
+    /**
      * @return string
      */
     public function getReady(): string
     {
-        return json_encode($this->getResponse(), JSON_PRETTY_PRINT);
+        $response = $this->getResponse();
+
+        if (!$response['response']) {
+            $response['error'] = 'Данные не получены, либо ошибка игрового сервера';
+        }
+
+        return json_encode($response, JSON_PRETTY_PRINT);
     }
 
     /**
@@ -43,19 +56,23 @@ class Ajax
     }
 
     /**
-     * @return bool
-     */
-    public function isValidRequest(): bool
-    {
-        return isset($_GET) && array_key_exists('user_id', $_GET) && is_numeric($_GET['user_id']);
-    }
-
-    /**
      * @throws Exception
      */
     public function startRender(): void
     {
-        $this->setResponse((new ViewData(new Script(), new Game("415593668", "b497fa458ca25f40fc1d43fcdce9aee1")))->prepare()->get());
+        $this->setResponse($this->getViewData()->prepare()->get());
+    }
+
+    /**
+     * @return ViewData|null
+     */
+    public function getViewData ()
+    {
+        if ($this->viewData === null) {
+            $this->viewData = new ViewData();
+        }
+
+        return $this->viewData;
     }
 
     /**

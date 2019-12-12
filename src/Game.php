@@ -2,9 +2,13 @@
 
 namespace src\Script;
 
+use dimsog\arrayhelper\ArrayHelper;
 use Exception;
 
-class Game
+ini_set("display_errors", "On");
+error_reporting(E_ALL);
+
+class Game extends Data
 {
     /**
      * @var string
@@ -34,6 +38,9 @@ class Game
      */
     function __construct(string $id, string $auth)
     {
+
+        parent::__construct();
+
         $this->ch = curl_init();
 
         $this->setUserID($id)
@@ -130,6 +137,6 @@ class Game
      */
     public function isCorrectPack(array $pack, $userID): bool
     {
-        return (is_array($pack) && (new Script)->getValue($pack, [0, 0, 0]) === $userID);
+        return (is_array($pack) && ArrayHelper::getValue($pack, [0, 0, 0]) === $userID);
     }
 }
