@@ -35,7 +35,7 @@ class ViewData extends App
      */
     public function prepare (): self
     {
-        if ($this->getApp()->isGet() && $this->getApp()->isAjax()) {
+        if ($this->getApp()->isGet()) {
             for ($k = 0; $k < 3; $k++) {
                 $socialPack = $this->getGame()->socialGet($_GET['user_id']);
                 if ($this->getGame()->isCorrectPack($socialPack, $_GET['user_id'])) {
