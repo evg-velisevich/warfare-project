@@ -2,7 +2,7 @@
 
 namespace src\Script;
 
-class App
+class App extends UserModel
 {
 
     /**

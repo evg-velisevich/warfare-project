@@ -137,6 +137,6 @@ class Game extends Data
      */
     public function isCorrectPack(array $pack, $userID): bool
     {
-        return (is_array($pack) && ArrayHelper::getValue($pack, [0, 0, 0]) === $userID);
+        return (is_array($pack) && ArrayHelper::getValue($pack, '0.0.0') === $userID);
     }
 }

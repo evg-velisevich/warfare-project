@@ -39,7 +39,7 @@ class ViewData extends App
             for ($k = 0; $k < 3; $k++) {
                 $socialPack = $this->getGame()->socialGet($_GET['user_id']);
                 if ($this->getGame()->isCorrectPack($socialPack, $_GET['user_id'])) {
-                    $this->getApp()->setModel(json_decode($socialPack[0][0][1], true));
+                    $this->getScript()->setUserModel(json_decode($socialPack[0][0][1], true));
                     $this->data = $this->getScript()->renderHtml();
                     break;
                 }

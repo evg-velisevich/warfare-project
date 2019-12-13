@@ -6,7 +6,7 @@ namespace src\Script;
 ini_set("display_errors", "On");
 error_reporting(E_ALL);
 
-class UserModel extends App
+class UserModel
 {
 
     /**
@@ -19,7 +19,7 @@ class UserModel extends App
      * @param null $default
      * @return mixed|null
      */
-    public function get ($key, $default = null)
+    public function getKey ($key, $default = null)
     {
         return array_key_exists($key, $this->getModel()) ? $this->getModel()[$key] : $default;
     }
@@ -57,7 +57,7 @@ class UserModel extends App
      * @param array $model
      * @return UserModel
      */
-    public function setModel (array $model): UserModel
+    public function setModel (array $model): self
     {
         $this->model = $model;
         return $this;

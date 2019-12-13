@@ -43,6 +43,6 @@ class UserModelTest extends TestCase
         $class = new UserModel();
         $class->set('model', 'value');
 
-        $this->assertEquals('value', $class->get('model'));
+        $this->assertEquals('value', $class->getKey('model'));
     }
 }

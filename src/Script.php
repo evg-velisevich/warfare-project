@@ -95,15 +95,19 @@ class Script extends Formatter
     }
 
     /**
-     * @return array
+     *
      */
-    public function getUserModel(): array
+    public function getUserModel()
     {
-        if ($this->userModel === null) {
-            $this->userModel = new UserModel();
-        }
-        
         return $this->userModel;
+    }
+
+    /**
+     * @param array $model
+     */
+    public function setUserModel(array $model)
+    {
+        $this->userModel = $model;
     }
 
     /**
@@ -284,14 +288,14 @@ class Script extends Formatter
         ];
 
         if ($achievementCategory > 0) {
-            if ($data = ArrayHelper::getValue($array, [$achievementCategory, $achievementIndex])) {
+            if ($data = ArrayHelper::getValue($array, $achievementCategory . '.' . $achievementIndex)) {
                 $result = [
                     'index' => $data[0],
                     'time' => $data[1],
                 ];
             }
         } else {
-            if ($data = ArrayHelper::getValue($array, [$achievementIndex])) {
+            if ($data = ArrayHelper::getValue($array, $achievementIndex)) {
                 $result = [
                     'index' => 0,
                     'time' => $data,
@@ -340,7 +344,7 @@ class Script extends Formatter
         $result = [
             'left' => 0,
             'have' => $this->getExperienceAmount(),
-            'percentage' => 100,
+            'percentage' => 0,
         ];
 
         $pack = $this->getData()->get('levels');
@@ -350,8 +354,8 @@ class Script extends Formatter
             $result['left'] = $pack[$level + 1] - $result['have'];
         }
 
-        if ($result['left']) {
-            $result['percentage'] = floor($result['left'] / (($pack[$level + 1] - $pack[$level]) / 100));
+        if ($result['have']) {
+            $result['percentage'] = floor(($result['have'] - $pack[$level]) / (($pack[$level + 1] - $pack[$level]) / 100));
         }
 
         foreach ($result as &$val) {
@@ -560,7 +564,7 @@ class Script extends Formatter
     {
 
         for ($k = 1, $decks = $this->getDecks(), $res = 0; $k < count($decks); $k++) {
-            $res += count(ArrayHelper::getValue($decks, [$k, 'parts'], []));
+            $res += count(ArrayHelper::getValue($decks, $k.'.parts', []));
         }
 
         return $res;
